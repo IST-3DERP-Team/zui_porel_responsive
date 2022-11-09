@@ -1126,11 +1126,8 @@ sap.ui.define([
                 var oTable = oEvent.getSource();
                 var sModel;
 
-                if (oTable.getId().indexOf("mrpHdrTab") >= 0) {
-                    sModel = "mrpHdr";
-                }
-                else if (oTable.getId().indexOf("mrpDtlTab") >= 0) {
-                    sModel = "mrpDtl";
+                if (oTable.getId().indexOf("poRelTab") >= 0) {
+                    sModel = "poRel";
                 }
 
                 setTimeout(() => {
