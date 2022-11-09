@@ -10,6 +10,9 @@
         title="PO Release Result"
         resizable="true"
         draggable="true">
+        <beginButton>
+            <Button text="Export To Excel" press="onExport('poResult')"/>
+        </beginButton>
         <endButton>
 			<Button text="Close" press=".onPOResultDialogClose"/>
 		</endButton>

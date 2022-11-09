@@ -9,12 +9,14 @@ sap.ui.define([
     "sap/ui/table/library",
     "sap/m/TablePersoController",
     'sap/m/MessageToast',
-	'sap/m/SearchField'
+	'sap/m/SearchField',
+    "sap/ui/export/Spreadsheet",
+    "../js/Common",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, MessageBox, Filter, FilterOperator, Sorter, Device, library, TablePersoController, MessageToast, SearchField) {
+    function (Controller, JSONModel, MessageBox, Filter, FilterOperator, Sorter, Device, library, TablePersoController, MessageToast, SearchField, Spreadsheet, Common) {
         "use strict";
 
         var _this;
@@ -54,6 +56,10 @@ sap.ui.define([
 
                 this._aPOResultData = [];
             },
+
+            onExit() {
+
+            },
             
             initializeComponent() {
                 // Get Captions
@@ -77,6 +83,26 @@ sap.ui.define([
                 this.byId("btnPrintPreview").setEnabled(false);
                 this.byId("btnExport").setEnabled(false);
                 this.byId("btnRefresh").setEnabled(false);
+
+                this._tableRendered = "";
+                var oTableEventDelegate = {
+                    onkeyup: function(oEvent){
+                        _this.onKeyUp(oEvent);
+                    },
+
+                    onAfterRendering: function(oEvent) {
+                        _this.onAfterTableRendering(oEvent);
+                    }
+                };
+
+                this.byId("poRelTab").addEventDelegate(oTableEventDelegate);
+            },
+
+            onAfterTableRendering: function(oEvent) {
+                if (this._tableRendered !== "") {
+                    this.setActiveRowHighlight(this._tableRendered.replace("Tab", ""));
+                    this._tableRendered = "";
+                } 
             },
 
             getColumns: async function() {
@@ -317,6 +343,7 @@ sap.ui.define([
                             var oJSONModel = new sap.ui.model.json.JSONModel();
                             oJSONModel.setData(data);
                             _this.getView().setModel(oJSONModel, "poRel");
+                            _this._tableRendered = "poRelTab";
 
                             _this.onFilterBySmart(pFilters, pFilterGlobal, aFilterTab);
 
@@ -345,27 +372,29 @@ sap.ui.define([
                 var aFilterGrp = [];
                 var aFilterCol = [];
 
-                pFilters[0].aFilters.forEach(x => {
-                    if (Object.keys(x).includes("aFilters")) {
-                        x.aFilters.forEach(y => {
-                            var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == y.sPath.toUpperCase())[0].name;
-                            aFilter.push(new Filter(sName, FilterOperator.EQ, y.oValue1));
+                if (pFilters.length > 0) {
+                    pFilters[0].aFilters.forEach(x => {
+                        if (Object.keys(x).includes("aFilters")) {
+                            x.aFilters.forEach(y => {
+                                var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == y.sPath.toUpperCase())[0].name;
+                                aFilter.push(new Filter(sName, FilterOperator.EQ, y.oValue1));
+
+                                //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
+                            });
+                            var oFilterGrp = new Filter(aFilter, false);
+                            aFilterGrp.push(oFilterGrp);
+                            aFilter = [];
+                        } else {
+                            var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == x.sPath.toUpperCase())[0].name;
+                            aFilter.push(new Filter(sName, FilterOperator.EQ, x.oValue1));
+                            var oFilterGrp = new Filter(aFilter, false);
+                            aFilterGrp.push(oFilterGrp);
+                            aFilter = [];
 
                             //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
-                        });
-                        var oFilterGrp = new Filter(aFilter, false);
-                        aFilterGrp.push(oFilterGrp);
-                        aFilter = [];
-                    } else {
-                        var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == x.sPath.toUpperCase())[0].name;
-                        aFilter.push(new Filter(sName, FilterOperator.EQ, x.oValue1));
-                        var oFilterGrp = new Filter(aFilter, false);
-                        aFilterGrp.push(oFilterGrp);
-                        aFilter = [];
-
-                        //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
-                    }
-                });
+                        }
+                    });
+                }
 
                 if (pFilterGlobal) {
                     this._aFilterableColumns["poRel"].forEach(item => {
@@ -403,6 +432,7 @@ sap.ui.define([
 
                 if (aSelIdx.length === 0) {
                     MessageBox.information(_oCaption.INFO_NO_SELECTED);
+                    _this.closeLoadingDialog();
                     return;
                 }
 
@@ -414,10 +444,22 @@ sap.ui.define([
                 var aIndices = oTable.getBinding("rows").aIndices;
 
                 aSelIdx.forEach(idx => {
-                    aPOItem.push({
-                        "Pono": aData[aIndices[idx]].PONO
-                    })
+                    if ((pType == "CANCEL" || pType == "REJECT") && aData[aIndices[idx]].WITHGR != "X") {
+                        aPOItem.push({
+                            "Pono": aData[aIndices[idx]].PONO
+                        })
+                    } else if (pType == "RELEASE") {
+                        aPOItem.push({
+                            "Pono": aData[aIndices[idx]].PONO
+                        })
+                    }
                 })
+
+                if (aPOItem.length === 0) {
+                    MessageBox.information(_oCaption.INFO_SEL_PO_WITHGR);
+                    _this.closeLoadingDialog();
+                    return;
+                }
 
                 var oParam = {
                     "N_LOCK_PO_ITEMTAB": aPOItem,
@@ -475,12 +517,14 @@ sap.ui.define([
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("PO_ReleaseSet", data);
+                        _this.onUnlock(pPOList);
                         _this.closeLoadingDialog();
                         _this._aPOResultData = data.N_POREL_RETTAB.results;
                         _this.showPOResultDialog();
                         
                     },
                     error: function(err) {
+                        _this.onUnlock(pPOList);
                         MessageBox.error(err);
                         _this.closeLoadingDialog();
                     }
@@ -508,12 +552,14 @@ sap.ui.define([
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("PO_ResetReleaseSet", data);
+                        _this.onUnlock(pPOList);
                         _this.closeLoadingDialog();
                         _this._aPOResultData = data.N_PORETRELEASE_RETTAB.results;
                         _this.showPOResultDialog();
                         
                     },
                     error: function(err) {
+                        _this.onUnlock(pPOList);
                         MessageBox.error(err);
                         _this.closeLoadingDialog();
                     }
@@ -522,8 +568,10 @@ sap.ui.define([
 
             onRejectSave(pPOList) {
                 var oModel = _this.getOwnerComponent().getModel();
+                var oModelRfc = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var sMessage = "";
 
-                pPOList.forEach(item => {
+                pPOList.forEach((item, idxPO) => {
                     oModel.read("/POItemSet", {
                         urlParameters: {
                             "$filter": "PONO eq '" + item.Pono + "'"
@@ -572,23 +620,60 @@ sap.ui.define([
                                 N_ChangePOReturn: []
                             }
 
-                            console.log("ChangePOSet Param", oParam);
-                            var oModelRfc = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
-                            oModelRfc.create("/ChangePOSet", oParam, {
-                                method: "POST",
-                                success: function(data, oResponse) {
-                                    console.log("ChangePOSet", data);
-                                    
-                                },
-                                error: function(err) {
-                                    MessageBox.error(err);
-                                }
-                            });
-
+                            setTimeout(() => {
+                                console.log("ChangePOSet Param", oParam);
+                                oModelRfc.create("/ChangePOSet", oParam, {
+                                    method: "POST",
+                                    success: function(data, oResponse) {
+                                        console.log("ChangePOSet", data);
+                                        if (data.N_ChangePOReturn.results.length > 0) {
+                                            sMessage += data.N_ChangePOReturn.results[0].Msgv1 + "\n";
+                                            console.log("sMessage", sMessage)
+                                        }
+                                        
+                                        if (idxPO == (pPOList.length - 1)) {
+                                            _this.onUnlock(pPOList);
+                                            MessageBox.information(sMessage);
+                                            _this.closeLoadingDialog();
+                                        }
+                                    },
+                                    error: function(err) {
+                                        if (idxPO == (pPOList.length - 1)) {
+                                            _this.onUnlock(pPOList);
+                                            MessageBox.error(err);
+                                            _this.closeLoadingDialog();
+                                        }
+                                    }
+                                });
+                            }, 100);
                         },
-                        error: function (err) {}
+                        error: function (err) {
+                            _this.closeLoadingDialog();
+                        }
                     })
                 })
+            },
+
+            onUnlock(pPOList) {
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+
+                var oParam = {
+                    "N_UNLOCK_PO_ITEMTAB": pPOList,
+                    "N_UNLOCK_PO_ENQ": [], 
+                    "N_UNLOCK_PO_MESSAGES": [] 
+                }
+
+                oModel.create("/Unlock_POHdr_Set", oParam, {
+                    method: "POST",
+                    success: function(data, oResponse) {
+                        console.log("Unlock_POHdr_Set", data)
+                        _this.closeLoadingDialog();
+                    },
+                    error: function(err) {
+                        MessageBox.error(err);
+                        _this.closeLoadingDialog();
+                    }
+                });
             },
 
             onRefresh() {
@@ -928,6 +1013,28 @@ sap.ui.define([
                 this._oViewSettingsDialog["zuiporel.view.fragments.FilterDialog"].close();
             },
 
+            onKeyUp(oEvent) {
+                if ((oEvent.key === "ArrowUp" || oEvent.key === "ArrowDown") && oEvent.srcControl.sParentAggregationName === "rows") {
+                    var oTable = this.byId(oEvent.srcControl.sId).oParent;
+
+                    if (oTable.getId().indexOf("poRelTab") >= 0) {
+                        if (this.byId(oEvent.srcControl.sId).getBindingContext("poRel")) {
+                            var sRowPath = this.byId(oEvent.srcControl.sId).getBindingContext("poRel").sPath;
+                            
+                            oTable.getModel("poRel").getData().results.forEach(row => row.ACTIVE = "");
+                            oTable.getModel("poRel").setProperty(sRowPath + "/ACTIVE", "X"); 
+                            
+                            oTable.getRows().forEach(row => {
+                                if (row.getBindingContext("poRel") && row.getBindingContext("poRel").sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
+                                    row.addStyleClass("activeRow");
+                                }
+                                else row.removeStyleClass("activeRow")
+                            })
+                        }
+                    }
+                }
+            },
+
             showLoadingDialog(arg) {
                 if (!_this._LoadingDialog) {
                     _this._LoadingDialog = sap.ui.xmlfragment("zuiporel.view.fragments.LoadingDialog", _this);
@@ -940,6 +1047,171 @@ sap.ui.define([
 
             closeLoadingDialog() {
                 _this._LoadingDialog.close();
+            },
+
+            onExport(pModel) {
+                console.log("onExport", pModel)
+                var oTable = _this.getView().byId(pModel + "Tab");
+                var aCols = [], aRows = [], oSettings, oSheet;
+                var aParent, aChild;
+                var fileName;
+
+                var sFileName = "";
+                if (pModel == "poRel") {
+                    var columns = oTable.getColumns();
+                    for (var i = 0; i < columns.length; i++) {
+                        aCols.push({
+                            label: columns[i].mProperties.filterProperty,
+                            property: columns[i].mProperties.filterProperty,
+                            type: 'string'
+                        })
+                    }
+
+                    sFileName = "PO Release";
+
+                    var aData = _this.getView().getModel(pModel).getData().results;
+                    var aIndices = this.byId("poRelTab").getBinding("rows").aIndices;
+                    aIndices.forEach(item => {
+                        aRows.push(aData[item]);
+                    });
+                } else if (pModel == "poResult") {
+                    aCols.push({
+                        label: "Purchaseorder",
+                        property: "Purchaseorder",
+                        type: "string"
+                    });
+
+                    aCols.push({
+                        label: "Message",
+                        property: "Message",
+                        type: "string"
+                    });
+
+                    aCols.push({
+                        label: "RelStatusNew",
+                        property: "RelStatusNew",
+                        type: "string"
+                    });
+
+                    aCols.push({
+                        label: "RelIndicatorNew",
+                        property: "RelIndicatorNew",
+                        type: "string"
+                    });
+
+                    sFileName = "PO Result";
+                    aRows = _this._aPOResultData;
+                }
+                console.log("aRows", aRows)
+                var date = new Date();
+                fileName = sFileName + " " + date.toLocaleDateString('en-us', { year: "numeric", month: "short", day: "numeric" });
+
+                oSettings = {
+                    fileName: fileName,
+                    workbook: { columns: aCols },
+                    dataSource: aRows
+                };
+
+                oSheet = new Spreadsheet(oSettings);
+                oSheet.build()
+                    .then(function () {
+                        MessageToast.show('Spreadsheet export has finished');
+                    })
+                    .finally(function () {
+                        oSheet.destroy();
+                    });
+            },
+
+            onFirstVisibleRowChanged: function (oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("mrpHdrTab") >= 0) {
+                    sModel = "mrpHdr";
+                }
+                else if (oTable.getId().indexOf("mrpDtlTab") >= 0) {
+                    sModel = "mrpDtl";
+                }
+
+                setTimeout(() => {
+                    var oData = oTable.getModel(sModel).getData().results;
+                    var iStartIndex = oTable.getBinding("rows").iLastStartIndex;
+                    var iLength = oTable.getBinding("rows").iLastLength + iStartIndex;
+
+                    if (oTable.getBinding("rows").aIndices.length > 0) {
+                        for (var i = iStartIndex; i < iLength; i++) {
+                            var iDataIndex = oTable.getBinding("rows").aIndices.filter((fItem, fIndex) => fIndex === i);
+    
+                            if (oData[iDataIndex].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
+                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
+                        }
+                    }
+                    else {
+                        for (var i = iStartIndex; i < iLength; i++) {
+                            if (oData[i].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
+                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
+                        }
+                    }
+                }, 1);
+            },
+
+            onFilter: function(oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("poRelTab") >= 0) {
+                    sModel = "poRel";
+                }
+
+                this.setActiveRowHighlight(sModel);
+            },
+
+            onColumnUpdated: function (oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("poRelTab") >= 0) {
+                    sModel = "poRel";
+                }
+
+                this.setActiveRowHighlight(sModel);
+            },
+
+            setActiveRowHighlight(arg) {
+                var oTable = this.byId(arg + "Tab");
+                
+                setTimeout(() => {
+                    var iActiveRowIndex = oTable.getModel(arg).getData().results.findIndex(item => item.ACTIVE === "X");
+
+                    oTable.getRows().forEach(row => {
+                        if (row.getBindingContext(arg) && +row.getBindingContext(arg).sPath.replace("/results/", "") === iActiveRowIndex) {
+                            row.addStyleClass("activeRow");
+                        }
+                        else row.removeStyleClass("activeRow");
+                    })
+                }, 1);
+            },
+
+            onCellClick: function(oEvent) {
+                if (oEvent.getParameters().rowBindingContext) {
+                    var oTable = oEvent.getSource(); //this.byId("ioMatListTab");
+                    var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
+                    var sModel;
+
+                    if (oTable.getId().indexOf("poRelTab") >= 0) {
+                        sModel = "poRel";
+                    }
+    
+                    oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
+                    oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
+                    
+                    oTable.getRows().forEach(row => {
+                        if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
+                            row.addStyleClass("activeRow");
+                        }
+                        else row.removeStyleClass("activeRow");
+                    })
+                }
             },
 
             getCaption() {
@@ -971,7 +1243,7 @@ sap.ui.define([
 
                 // MessageBox
                 oDDTextParam.push({CODE: "INFO_NO_SELECTED"});
-                // oDDTextParam.push({CODE: "CONFIRM_DISREGARD_CHANGE"});
+                oDDTextParam.push({CODE: "INFO_SEL_PO_WITHGR"});
                 // oDDTextParam.push({CODE: "INFO_NO_DATA_RESET"});
                 // oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
                 // oDDTextParam.push({CODE: "INFO_INVALID_SAVE"});
