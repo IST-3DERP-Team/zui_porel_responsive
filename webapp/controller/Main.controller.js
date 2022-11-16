@@ -96,7 +96,18 @@ sap.ui.define([
                 };
 
                 this.byId("poRelTab").addEventDelegate(oTableEventDelegate);
+
+
+                var testDelegate = {
+                    change: function(oEvent){
+                        _this.onChangeSmartFilter(oEvent);
+                    }
+                };
+
+                this.byId("filterRelGrp").addEventDelegate(testDelegate)
             },
+
+
 
             onAfterTableRendering: function(oEvent) {
                 if (this._tableRendered !== "") {
@@ -306,6 +317,10 @@ sap.ui.define([
                 })
             },
 
+            onChangeSmartFilter(oEvent) {
+                console.log("onChangeSmartFilter", oEvent)
+            },
+
             onSearch(oEvent) {
                 this.showLoadingDialog("Loading...");
 
@@ -324,12 +339,17 @@ sap.ui.define([
             },
 
             getPORel(pFilters, pFilterGlobal) {
-                console.log("getPORel", pFilters, pFilterGlobal)
+                //console.log("getPORel", pFilters, pFilterGlobal)
+                
                 var oModel = this.getOwnerComponent().getModel();
                 oModel.read('/POReleaseSet', {
                     success: function (data, response) {
                         console.log("POReleaseSet", data)
                         if (data.results.length > 0) {
+                            data.results.sort(function(a,b) {
+                                return new Date(b.PODATE) - new Date(a.PODATE);
+                            });
+
                             data.results.forEach(item => {
                                 if (item.PODATE !== null)
                                     item.PODATE = dateFormat.format(item.PODATE);
@@ -356,6 +376,13 @@ sap.ui.define([
 
                             _this.setRowReadMode("poRel");
                         }
+
+                        var oTable = _this.getView().byId("poRelTab");
+                        oTable.getColumns().forEach((col, idx) => {   
+                            if (col._oSorter) {
+                                oTable.sort(col, col.mProperties.sortOrder === "Ascending" ? SortOrder.Ascending : SortOrder.Descending, true);
+                            }
+                        });
                         
                         _this.closeLoadingDialog();
                     },
@@ -426,7 +453,7 @@ sap.ui.define([
             },
 
             onRelease(pType) {
-                _this.showLoadingDialog();
+                _this.showLoadingDialog("Executing...");
                 var oTable = this.byId("poRelTab");
                 var aSelIdx = oTable.getSelectedIndices();
 
@@ -450,7 +477,8 @@ sap.ui.define([
                         })
                     } else if (pType == "RELEASE") {
                         aPOItem.push({
-                            "Pono": aData[aIndices[idx]].PONO
+                            "Pono": aData[aIndices[idx]].PONO,
+                            "RelCode": aData[aIndices[idx]].RELCD
                         })
                     }
                 })
@@ -461,8 +489,15 @@ sap.ui.define([
                     return;
                 }
 
+                var aParamLockPO = [];
+                aPOItem.forEach(item => {
+                    aParamLockPO.push({
+                        Pono: item.Pono
+                    })
+                });
+
                 var oParam = {
-                    "N_LOCK_PO_ITEMTAB": aPOItem,
+                    "N_LOCK_PO_ITEMTAB": aParamLockPO,
                     "iv_count": 300, 
                     "N_LOCK_PO_ENQ": [], 
                     "N_LOCK_PO_OUTMESSAGES": [] 
@@ -500,7 +535,7 @@ sap.ui.define([
                 pPOList.forEach(item => {
                     aPOItem.push({
                         Purchaseorder: item.Pono,
-                        PoRelCode: "",
+                        PoRelCode: item.RelCode,
                         UseExceptions: "X",
                         NoCommit: ""
                     });
@@ -536,7 +571,7 @@ sap.ui.define([
                 pPOList.forEach(item => {
                     aPOItem.push({
                         Purchaseorder: item.Pono,
-                        PoRelCode: "",
+                        PoRelCode: "00",
                         UseExceptions: "X"
                     });
                 })
@@ -657,8 +692,14 @@ sap.ui.define([
             onUnlock(pPOList) {
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
 
+                var aParamUnLockPO = [];
+                pPOList.forEach(item => {
+                    aParamUnLockPO.push({
+                        Pono: item.Pono
+                    })
+                });
                 var oParam = {
-                    "N_UNLOCK_PO_ITEMTAB": pPOList,
+                    "N_UNLOCK_PO_ITEMTAB": aParamUnLockPO,
                     "N_UNLOCK_PO_ENQ": [], 
                     "N_UNLOCK_PO_MESSAGES": [] 
                 }
