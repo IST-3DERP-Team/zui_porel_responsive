@@ -19,19 +19,18 @@
         <Schema Namespace="ZVB_3DERP_PORELFILTER_CDS" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
             <EntityType Name="ZVB_3DERP_PORELCDType" sap:label="PO Release Code" sap:value-list="true" sap:content-version="1">
                 <Key>
-                    <PropertyRef Name="RELCD"/>
                     <PropertyRef Name="RELGRP"/>
+                    <PropertyRef Name="RELCD"/>
                 </Key>
-                <Property Name="RELCD" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:label="Release code"/>
                 <Property Name="RELGRP" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:label="Release group"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of release code"/>
+                <Property Name="RELCD" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Release code"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of release code"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELDOCTYPEType" sap:label="PO Release Document Type" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="DOCTYPE"/>
                 </Key>
-                <Property Name="DOCTYPE" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Purchasing Doc. Type" sap:quickinfo="Purchasing Document Type"/>
-                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="20" sap:label="Doc. Type Descript." sap:quickinfo="Short Description of Purchasing Document Type"/>
+                <Property Name="DOCTYPE" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Purchasing Doc. Type" sap:quickinfo="Purchasing Document Type"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELFILTERType" sap:label="PO Release Filter" sap:content-version="1">
                 <Key>
@@ -51,22 +50,21 @@
                 <Key>
                     <PropertyRef Name="RELGRP"/>
                 </Key>
-                <Property Name="RELGRP" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:label="Release group"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of release strategy"/>
+                <Property Name="RELGRP" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Release group"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of release group"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELINDType" sap:label="PO Release Indicator" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="RELIND"/>
                 </Key>
-                <Property Name="RELIND" Type="Edm.String" Nullable="false" MaxLength="1" sap:display-format="UpperCase" sap:label="Release indicator" sap:quickinfo="Release Indicator: Purchasing Document"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="30" sap:label="Description" sap:quickinfo="Description of Release Indicator"/>
+                <Property Name="RELIND" Type="Edm.String" Nullable="false" MaxLength="1" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Release indicator" sap:quickinfo="Release Indicator: Purchasing Document"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="30" sap:label="Description" sap:quickinfo="Description of Release Indicator"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELPONOType" sap:label="PO Release PO Number" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="PONO"/>
                 </Key>
                 <Property Name="PONO" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchasing Document" sap:quickinfo="Purchasing Document Number"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchasing Document" sap:quickinfo="Purchasing Document Number"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELPURCHGRPType" sap:label="PO Release Purchasing Group" sap:value-list="true" sap:content-version="1">
                 <Key>
@@ -79,15 +77,15 @@
                 <Key>
                     <PropertyRef Name="PURCHORG"/>
                 </Key>
-                <Property Name="PURCHORG" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Purch. organization" sap:quickinfo="Purchasing organization"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of purchasing organization"/>
+                <Property Name="PURCHORG" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Purch. organization" sap:quickinfo="Purchasing organization"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of purchasing organization"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_PORELVENDORType" sap:label="PO Release Vendor" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="VENDOR"/>
                 </Key>
-                <Property Name="VENDOR" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Vendor" sap:quickinfo="Vendor's account number"/>
-                <Property Name="DESCRIP" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/>
+                <Property Name="VENDOR" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Vendor" sap:quickinfo="Vendor's account number"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/>
             </EntityType>
             <EntityContainer Name="ZVB_3DERP_PORELFILTER_CDS_Entities" m:IsDefaultEntityContainer="true" sap:message-scope-supported="true" sap:supported-formats="atom json xlsx">
                 <EntitySet Name="ZVB_3DERP_PORELCD" EntityType="ZVB_3DERP_PORELFILTER_CDS.ZVB_3DERP_PORELCDType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
@@ -102,6 +100,26 @@
             </EntityContainer>
             <Annotations Target="ZVB_3DERP_PORELFILTER_CDS.ZVB_3DERP_PORELFILTERType/RELCD" xmlns="http://docs.oasis-open.org/odata/ns/edm">
                 <Annotation Term="Common.ValueList">
+					<Record Type="Common.ValueListType">
+						<PropertyValue Property="CollectionPath" String="ZVB_3DERP_PORELCD"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterIn">
+									<PropertyValue Property="LocalDataProperty" PropertyPath="RELGRP"/>
+									<PropertyValue Property="ValueListProperty" String="RELGRP"/>
+								</Record>
+								<Record Type="Common.ValueListParameterOut">
+									<PropertyValue Property="LocalDataProperty" PropertyPath="RELCD"/>
+									<PropertyValue Property="ValueListProperty" String="RELCD"/>
+								</Record>
+								<Record Type="Common.ValueListParameterDisplayOnly">
+									<PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+                <!-- <Annotation Term="Common.ValueList">
                     <Record>
                         <PropertyValue Property="Label" String="PO Release Code"/>
                         <PropertyValue Property="CollectionPath" String="ZVB_3DERP_PORELCD"/>
@@ -116,14 +134,14 @@
                                     <PropertyValue Property="ValueListProperty" String="RELGRP"/>
                                 </Record>
                                 <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
                     </Record>
-                </Annotation>
+                </Annotation> -->
             </Annotations>
-            <Annotations Target="ZVB_3DERP_PORELFILTER_CDS.ZVB_3DERP_PORELFILTERType/RELGRP" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+            <!-- <Annotations Target="ZVB_3DERP_PORELFILTER_CDS.ZVB_3DERP_PORELFILTERType/RELGRP" xmlns="http://docs.oasis-open.org/odata/ns/edm">
                 <Annotation Term="Common.ValueList">
                     <Record>
                         <PropertyValue Property="Label" String="PO Release Group"/>
@@ -136,13 +154,13 @@
                                     <PropertyValue Property="ValueListProperty" String="RELGRP"/>
                                 </Record>
                                 <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
                     </Record>
                 </Annotation>
-            </Annotations>
+            </Annotations> -->
             <Annotations Target="ZVB_3DERP_PORELFILTER_CDS.ZVB_3DERP_PORELFILTERType/DOCTYPE" xmlns="http://docs.oasis-open.org/odata/ns/edm">
                 <Annotation Term="Common.ValueList">
                     <Record>
@@ -154,9 +172,6 @@
                                 <Record Type="Common.ValueListParameterInOut">
                                     <PropertyValue Property="LocalDataProperty" PropertyPath="DOCTYPE"/>
                                     <PropertyValue Property="ValueListProperty" String="DOCTYPE"/>
-                                </Record>
-                                <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -176,7 +191,7 @@
                                     <PropertyValue Property="ValueListProperty" String="PURCHORG"/>
                                 </Record>
                                 <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -216,7 +231,7 @@
                                     <PropertyValue Property="ValueListProperty" String="VENDOR"/>
                                 </Record>
                                 <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -236,7 +251,7 @@
                                     <PropertyValue Property="ValueListProperty" String="RELIND"/>
                                 </Record>
                                 <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -254,9 +269,6 @@
                                 <Record Type="Common.ValueListParameterInOut">
                                     <PropertyValue Property="LocalDataProperty" PropertyPath="POLIST"/>
                                     <PropertyValue Property="ValueListProperty" String="PONO"/>
-                                </Record>
-                                <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="DESCRIP"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>

@@ -22,6 +22,7 @@ sap.ui.define([
         var _this;
         var _startUpInfo;
         var _oCaption = {};
+        var _aRelCd = [];
 
         // shortcut for sap.ui.table.SortOrder
         var SortOrder = library.SortOrder;
@@ -64,6 +65,12 @@ sap.ui.define([
             initializeComponent() {
                 // Get Captions
                 this.getCaption();
+
+                // Get Release Group
+                this.getRelGrp();
+
+                // Get Release Code
+                this.getRelCd();
 
                 // Get Columns
                 this.getColumns();
@@ -321,6 +328,52 @@ sap.ui.define([
                 console.log("onChangeSmartFilter", oEvent)
             },
 
+            getRelGrp() {
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_PORELFILTER_CDS");
+                oModel.read('/ZVB_3DERP_PORELGRP', {
+                    success: function (data, response) {
+                        //console.log("POReleaseGrp", data);
+                        var oJSONModel = new JSONModel();
+                        oJSONModel.setData(data);
+                        _this.getView().setModel(oJSONModel, "relGrp");
+                    },
+                    error: function (err) { 
+                        console.log("error", err)
+                    }
+                })
+            },
+
+            getRelCd() {
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_PORELFILTER_CDS");
+                oModel.read('/ZVB_3DERP_PORELCD', {
+                    success: function (data, response) {
+                        //console.log("POReleaseCd", data);
+                        _aRelCd = data.results;
+                    },
+                    error: function (err) { 
+                        console.log("error", err)
+                    }
+                })
+            },
+
+            onSelectionChangeRelGrp(oEvent) {
+                //console.log("onSelectionChangeRelGrp");
+                var sSelectedKey = this.getView().byId("cmbRelGrp").getSelectedKey();
+                var oRelCd = {results: []};
+                _aRelCd.forEach(item => {
+                    if (item.RELGRP == sSelectedKey) {
+                        oRelCd.results.push({
+                            RELCD: item.RELCD,
+                            DESCRIPTION: item.DESCRIPTION
+                        });
+
+                        var oJSONModel = new JSONModel();
+                        oJSONModel.setData(oRelCd);
+                        _this.getView().setModel(oJSONModel, "relCd");
+                    }
+                })
+            },
+
             onSearch(oEvent) {
                 this.showLoadingDialog("Loading...");
 
@@ -339,7 +392,7 @@ sap.ui.define([
             },
 
             getPORel(pFilters, pFilterGlobal) {
-                //console.log("getPORel", pFilters, pFilterGlobal)
+                console.log("getPORel", pFilters, pFilterGlobal)
                 
                 var oModel = this.getOwnerComponent().getModel();
                 oModel.read('/POReleaseSet', {
@@ -430,6 +483,24 @@ sap.ui.define([
                         else aFilter.push(new Filter(item.name, FilterOperator.Contains, pFilterGlobal));
                     })
 
+                    var oFilterGrp = new Filter(aFilter, false);
+                    aFilterGrp.push(oFilterGrp);
+                    aFilter = [];
+                }
+
+                // Release Group Custom
+                var sSelectedKeyRelGrp = this.getView().byId("cmbRelGrp").getSelectedKey();
+                if (sSelectedKeyRelGrp) {
+                    aFilter.push(new Filter("RELGRP", FilterOperator.Contains, sSelectedKeyRelGrp));
+                    var oFilterGrp = new Filter(aFilter, false);
+                    aFilterGrp.push(oFilterGrp);
+                    aFilter = [];
+                }
+                
+                // Release Code Custom
+                var sSelectedKeyRelCd = this.getView().byId("cmbRelCd").getSelectedKey();
+                if (sSelectedKeyRelCd) {
+                    aFilter.push(new Filter("RELCD", FilterOperator.Contains, sSelectedKeyRelCd));
                     var oFilterGrp = new Filter(aFilter, false);
                     aFilterGrp.push(oFilterGrp);
                     aFilter = [];

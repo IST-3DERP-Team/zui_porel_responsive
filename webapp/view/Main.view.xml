@@ -23,14 +23,51 @@
             <VBox id="vbPORel" fitContainer="true">
                 <sfb:SmartFilterBar id="sfbPORel" entitySet="ZVB_3DERP_PORELFILTER" enableBasicSearch="true" search="onSearch" 
                     persistencyKey="3DERP_PORelKey" filterContainerWidth="14rem" useToolbar="true" showClearOnFB="true" initialise="onSFBInitialise">
-                    <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterRelGrp" key="RELGRP" groupId="_BASIC" label="{ddtext>/RELGRP}" controlType="dropDownList" 
+                    <!-- <sfb:controlConfiguration>
+                        <sfb:ControlConfiguration id="filterRelGrp" key="RELGRP" groupId="_BASIC" label="{ddtext>/RELGRP}" controlType="dropDownList" filterType="single"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="0">
                         </sfb:ControlConfiguration>
-                    </sfb:controlConfiguration>
+                    </sfb:controlConfiguration> -->
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterRelCd" key="RELCD" groupId="_BASIC" label="{ddtext>/RELCD}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterRelGrp" key="RELGRP" groupId="_BASIC" label="{ddtext>/RELGRP}" index="0">
+                            <sfb:customControl>
+                                <ComboBox
+                                    id="cmbRelGrp"
+                                    showSecondaryValues= "false"
+                                    width="15rem"
+                                    items="{
+                                        path: 'relGrp>/results',
+                                        sorter: { path: 'RELGRP' }
+                                    }"
+                                    selectionChange="onSelectionChangeRelGrp"
+                                    >
+                                    <core:ListItem id="liRelGrp" key="{relGrp>RELGRP}" text="{relGrp>RELGRP} ({relGrp>DESCRIPTION})" additionalText="{relGrp>DESCRIPTION}"/>
+                                </ComboBox>
+                            </sfb:customControl>
+                        </sfb:ControlConfiguration>
+                    </sfb:controlConfiguration>
+                    <!-- <sfb:controlConfiguration>
+                        <sfb:ControlConfiguration id="filterRelCd" key="RELCD" groupId="_BASIC" label="{ddtext>/RELCD}" preventInitialDataFetchInValueHelpDialog="false" 
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="1">
+                        </sfb:ControlConfiguration>
+                    </sfb:controlConfiguration> -->
+                    <sfb:controlConfiguration>
+                        <sfb:ControlConfiguration id="filterRelCd" key="RELCD" groupId="_BASIC" label="{ddtext>/RELCD}" index="1">
+                            <sfb:customControl>
+                                <ComboBox
+                                    id="cmbRelCd"
+                                    showSecondaryValues= "false"
+                                    width="15rem"
+                                    items="{
+                                        path: 'relCd>/results',
+                                        sorter: { path: 'RELCD' }
+                                    }"
+                                    selectionChange="onSelectionChangeRelCd"
+                                    placeholder="Release Group is required"
+                                    >
+                                    <core:ListItem id="liRelCd" key="{relCd>RELCD}" text="{relCd>RELCD} ({relCd>DESCRIPTION})" additionalText="{relCd>DESCRIPTION}"/>
+                                </ComboBox>
+                            </sfb:customControl>
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
