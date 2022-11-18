@@ -577,16 +577,19 @@ sap.ui.define([
                 oModel.create("/Lock_POHdr_Set", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        console.log("Lock_POHdr_Set", data)
+                        console.log("Lock_POHdr_Set", data);
 
                         if (data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S").length == 0) {
-                            if (pType == "RELEASE") {
-                                _this.onRelSave(aPOItem);
-                            } else if (pType == "CANCEL") {
-                                _this.onCancelRelSave(aPOItem);
-                            } else if (pType == "REJECT") {
-                                _this.onRejectSave(aPOItem);
-                            }
+                            // Unlock first before release, reset, change PO to not encounter error
+                            _this.onUnlock(aPOItem, pType);
+
+                            // if (pType == "RELEASE") {
+                            //     _this.onRelSave(aPOItem);
+                            // } else if (pType == "CANCEL") {
+                            //     _this.onCancelRelSave(aPOItem);
+                            // } else if (pType == "REJECT") {
+                            //     _this.onRejectSave(aPOItem);
+                            // }
                         } else {
                             var oFilter = data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S")[0];
                             MessageBox.warning(oFilter.Message);
@@ -623,14 +626,14 @@ sap.ui.define([
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("PO_ReleaseSet", data);
-                        _this.onUnlock(pPOList);
+                        //_this.onUnlock(pPOList);
                         _this.closeLoadingDialog();
                         _this._aPOResultData = data.N_POREL_RETTAB.results;
                         _this.showPOResultDialog();
                         
                     },
                     error: function(err) {
-                        _this.onUnlock(pPOList);
+                        //_this.onUnlock(pPOList);
                         MessageBox.error(err);
                         _this.closeLoadingDialog();
                     }
@@ -658,14 +661,14 @@ sap.ui.define([
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("PO_ResetReleaseSet", data);
-                        _this.onUnlock(pPOList);
+                        //_this.onUnlock(pPOList);
                         _this.closeLoadingDialog();
                         _this._aPOResultData = data.N_PORETRELEASE_RETTAB.results;
                         _this.showPOResultDialog();
                         
                     },
                     error: function(err) {
-                        _this.onUnlock(pPOList);
+                        //_this.onUnlock(pPOList);
                         MessageBox.error(err);
                         _this.closeLoadingDialog();
                     }
@@ -738,14 +741,14 @@ sap.ui.define([
                                         }
                                         
                                         if (idxPO == (pPOList.length - 1)) {
-                                            _this.onUnlock(pPOList);
+                                            //_this.onUnlock(pPOList);
                                             MessageBox.information(sMessage);
                                             _this.closeLoadingDialog();
                                         }
                                     },
                                     error: function(err) {
                                         if (idxPO == (pPOList.length - 1)) {
-                                            _this.onUnlock(pPOList);
+                                            //_this.onUnlock(pPOList);
                                             MessageBox.error(err);
                                             _this.closeLoadingDialog();
                                         }
@@ -760,7 +763,7 @@ sap.ui.define([
                 })
             },
 
-            onUnlock(pPOList) {
+            onUnlock(pPOList, pType) {
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
 
                 var aParamUnLockPO = [];
@@ -779,7 +782,15 @@ sap.ui.define([
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("Unlock_POHdr_Set", data)
-                        _this.closeLoadingDialog();
+                        if (pType == "RELEASE") {
+                            _this.onRelSave(pPOList);
+                        } else if (pType == "CANCEL") {
+                            _this.onCancelRelSave(pPOList);
+                        } else if (pType == "REJECT") {
+                            _this.onRejectSave(pPOList);
+                        }
+
+                        //_this.closeLoadingDialog();
                     },
                     error: function(err) {
                         MessageBox.error(err);
