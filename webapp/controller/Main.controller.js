@@ -63,6 +63,8 @@ sap.ui.define([
             },
             
             initializeComponent() {
+                this.showLoadingDialog("Loading...");
+
                 // Get Captions
                 this.getCaption();
 
@@ -75,6 +77,15 @@ sap.ui.define([
                 // Get Columns
                 this.getColumns();
 
+                // Get Data
+                this.getPORel([], "");
+                this.byId("btnReleaseSave").setEnabled(true);
+                this.byId("btnCancelReleaseSave").setEnabled(true);
+                this.byId("btnRejectSave").setEnabled(true);
+                this.byId("btnPrintPreview").setEnabled(true);
+                this.byId("btnExport").setEnabled(true);
+                this.byId("btnRefresh").setEnabled(true);
+
                 // Add header search field
                 var oSmartFilter = this.getView().byId("sfbPORel");
                 if (oSmartFilter) {
@@ -84,12 +95,12 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_PORELFILTER_CDS");
                 oSmartFilter.setModel(oModel);
 
-                this.byId("btnReleaseSave").setEnabled(false);
-                this.byId("btnCancelReleaseSave").setEnabled(false);
-                this.byId("btnRejectSave").setEnabled(false);
-                this.byId("btnPrintPreview").setEnabled(false);
-                this.byId("btnExport").setEnabled(false);
-                this.byId("btnRefresh").setEnabled(false);
+                // this.byId("btnReleaseSave").setEnabled(false);
+                // this.byId("btnCancelReleaseSave").setEnabled(false);
+                // this.byId("btnRejectSave").setEnabled(false);
+                // this.byId("btnPrintPreview").setEnabled(false);
+                // this.byId("btnExport").setEnabled(false);
+                // this.byId("btnRefresh").setEnabled(false);
 
                 this._tableRendered = "";
                 var oTableEventDelegate = {
@@ -104,7 +115,6 @@ sap.ui.define([
 
                 this.byId("poRelTab").addEventDelegate(oTableEventDelegate);
 
-
                 var testDelegate = {
                     change: function(oEvent){
                         _this.onChangeSmartFilter(oEvent);
@@ -113,8 +123,6 @@ sap.ui.define([
 
                 this.byId("filterRelGrp").addEventDelegate(testDelegate)
             },
-
-
 
             onAfterTableRendering: function(oEvent) {
                 if (this._tableRendered !== "") {
