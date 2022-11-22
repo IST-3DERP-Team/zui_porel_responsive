@@ -1,5 +1,5 @@
 <mvc:View controllerName="zuiporel.controller.Main"
-    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:mvc="sap.ui.core.mvc"
     displayBlock="true"
     xmlns="sap.m"
     xmlns:uiL="sap.ui.layout"
@@ -11,17 +11,12 @@
 
     <Page id="page" enableScrolling="false" class="sapUiNoContentPadding" showHeader="false">
         <dependents>
-            <!-- <core:CommandExecution id="CE_NEW" command="New" enabled="true" execute=".onNew" />
-            <core:CommandExecution id="CE_EDIT" command="Edit" enabled="true" execute=".onEdit" />
-            <core:CommandExecution id="CE_DELETE" command="Delete" enabled="true" execute=".onDelete" />
-            <core:CommandExecution id="CE_SAVE" command="Save" enabled="true" execute=".onSave" />
-            <core:CommandExecution id="CE_CANCEL" command="Cancel" enabled="true" execute=".onCancel" /> -->
             <core:CommandExecution id="CE_REFRESH" command="Refresh" enabled="true" execute=".onRefresh" />
         </dependents>
         <content>
 
             <VBox id="vbPORel" fitContainer="true">
-                <sfb:SmartFilterBar id="sfbPORel" entitySet="ZVB_3DERP_PORELFILTER" enableBasicSearch="true" search="onSearch" 
+                <sfb:SmartFilterBar id="sfbPORel" entitySet="ZVB_3DERP_PORELFILTER" enableBasicSearch="true" search="onSearch"
                     persistencyKey="3DERP_PORelKey" filterContainerWidth="14rem" useToolbar="true" showClearOnFB="true" initialise="onSFBInitialise">
                     <!-- <sfb:controlConfiguration>
                         <sfb:ControlConfiguration id="filterRelGrp" key="RELGRP" groupId="_BASIC" label="{ddtext>/RELGRP}" controlType="dropDownList" filterType="single"
@@ -47,7 +42,7 @@
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <!-- <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterRelCd" key="RELCD" groupId="_BASIC" label="{ddtext>/RELCD}" preventInitialDataFetchInValueHelpDialog="false" 
+                        <sfb:ControlConfiguration id="filterRelCd" key="RELCD" groupId="_BASIC" label="{ddtext>/RELCD}" preventInitialDataFetchInValueHelpDialog="false"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="1">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration> -->
@@ -71,32 +66,32 @@
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterDocType" key="DOCTYPE" groupId="_BASIC" label="{ddtext>/DOCTYPE}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterDocType" key="DOCTYPE" groupId="_BASIC" label="{ddtext>/DOCTYPE}" controlType="dropDownList"
                             displayBehaviour="idOnly" mandatory="notMandatory" index="2">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPurchOrg" key="PURCHORG" groupId="_BASIC" label="{ddtext>/PURCHORG}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterPurchOrg" key="PURCHORG" groupId="_BASIC" label="{ddtext>/PURCHORG}" controlType="dropDownList"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="3">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPurchGrp" key="PURCHGRP" groupId="_BASIC" label="{ddtext>/PURCHGRP}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterPurchGrp" key="PURCHGRP" groupId="_BASIC" label="{ddtext>/PURCHGRP}" controlType="dropDownList"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="4">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" label="{ddtext>/VENDOR}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" label="{ddtext>/VENDOR}" controlType="dropDownList"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="5">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterRelInd" key="RELIND" groupId="_BASIC" label="{ddtext>/RELIND}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterRelInd" key="RELIND" groupId="_BASIC" label="{ddtext>/RELIND}" controlType="dropDownList"
                             displayBehaviour="idAndDescription" mandatory="notMandatory" index="6">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPONo" key="PONO" groupId="_BASIC" label="{ddtext>/PONO}" controlType="dropDownList" 
+                        <sfb:ControlConfiguration id="filterPONo" key="PONO" groupId="_BASIC" label="{ddtext>/PONO}" controlType="dropDownList"
                             displayBehaviour="idOnly" mandatory="notMandatory" index="7">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
@@ -105,29 +100,12 @@
                     </sfb:layoutData>
                 </sfb:SmartFilterBar>
 
-                <uiT:Table id="poRelTab"
-                    class="tablePadding"
-                    rows="{poRel>/results}"
-                    visibleRowCountMode="Auto"
-                    showColumnVisibilityMenu="true"
-                    enableColumnFreeze="true"
-                    enableCellFilter="true"
-                    selectionMode="MultiToggle"
-                    firstVisibleRowChanged="onFirstVisibleRowChanged"
-                    cellClick="onCellClick"
-                    sort="onSorted"
-                    filter="onFilter"
-                    columnFreeze="onColumnUpdated"
-                    columnMove="onColumnUpdated"
-                    columnResize="onColumnUpdated"
-                    columnSelect="onColumnUpdated"
-                    columnVisibility="onColumnUpdated"
-                    rowSelectionChange="onRowSelectionChange">
-                    <uiT:extension>
-                        <Toolbar>
+                <VBox id="vbMain" height="70%">
+                    <OverflowToolbar>
+                        <content>
                             <Text text="{ui>/rowCount} {ddtext>/ROWS}" />
                             <ToolbarSpacer/>
-                            <Button id="btnReleaseSave" 
+                            <Button id="btnReleaseSave"
                                 text="{ddtext>/RELSAVE}"
                                 press="onRelease('RELEASE')"
                                 visible="true"/>
@@ -146,23 +124,50 @@
                                 visible="true" />
                             <Button id="btnExport"
                                 text="{ddtext>/EXPORTTOEXCEL}"
-                                tooltip="{ddtext>/EXPORTTOEXCEL}" 
+                                tooltip="{ddtext>/EXPORTTOEXCEL}"
                                 press="onExport('poRel')"
                                 visible="true" />
-                            <Button id="btnRefresh" 
+                            <Button id="btnRefresh"
                                 icon="sap-icon://refresh"
                                 press="onRefresh"
-                                visible="true"/> 
-                        </Toolbar>
-                    </uiT:extension>
-                    <uiT:layoutData>
-                        <FlexItemData growFactor="1" baseSize="0%"/>
-                    </uiT:layoutData>
-                </uiT:Table>
+                                visible="true"/>
+                        </content>
+                        
+                    </OverflowToolbar>
+
+                    <ScrollContainer
+                        id="scPORel"
+                        height="100%"
+                        width="100%"
+                        vertical="true"
+                        horizontal="true"
+                    >
+                        <Table id="poRelTab"
+                            class="tablePadding"
+                            items="{poRel>/results}"
+                            fixedLayout="true"
+                            mode="MultiSelect"
+                            sticky="ColumnHeaders,HeaderToolbar"
+                            >
+                            <headerToolbar>
+                                
+                            </headerToolbar>
+                            <columns>
+                            </columns>
+                            <items>
+                                <ColumnListItem id="cliPORel" type="Active">
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                        <layoutData>
+                            <FlexItemData growFactor="1" baseSize="0%"/>
+                        </layoutData>
+                    </ScrollContainer>
+                
+                </VBox>
             </VBox>
-            
+
         </content>
     </Page>
 
-    
 </mvc:View>

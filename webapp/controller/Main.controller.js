@@ -12,11 +12,12 @@ sap.ui.define([
 	'sap/m/SearchField',
     "sap/ui/export/Spreadsheet",
     "../js/Common",
+    'jquery.sap.global', 
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, MessageBox, Filter, FilterOperator, Sorter, Device, library, TablePersoController, MessageToast, SearchField, Spreadsheet, Common) {
+    function (Controller, JSONModel, MessageBox, Filter, FilterOperator, Sorter, Device, library, TablePersoController, MessageToast, SearchField, Spreadsheet, Common, jQuery) {
         "use strict";
 
         var _this;
@@ -37,6 +38,10 @@ sap.ui.define([
                 oModelStartUp.loadData("/sap/bc/ui2/start_up").then(() => {
                     _startUpInfo = oModelStartUp.oData
                 });
+
+                this._oTableFilters = {};
+                this._sTableSortKey = "";
+                this._sTableSortOrder = "";
 
                 this.initializeComponent();
 
@@ -77,51 +82,22 @@ sap.ui.define([
                 // Get Columns
                 this.getColumns();
 
-                // Get Data
-                this.getPORel([], "");
-                this.byId("btnReleaseSave").setEnabled(true);
-                this.byId("btnCancelReleaseSave").setEnabled(true);
-                this.byId("btnRejectSave").setEnabled(true);
-                this.byId("btnPrintPreview").setEnabled(true);
-                this.byId("btnExport").setEnabled(true);
-                this.byId("btnRefresh").setEnabled(true);
-
                 // Add header search field
                 var oSmartFilter = this.getView().byId("sfbPORel");
                 if (oSmartFilter) {
                     oSmartFilter.attachFilterChange(function(oEvent) {});
+
+                    oSmartFilter.addEventDelegate({
+                        onclick: function(oEvent) {
+                            _this.handleSFButtonClick(oEvent)
+                        }
+                    })
                 }
 
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_PORELFILTER_CDS");
                 oSmartFilter.setModel(oModel);
 
-                // this.byId("btnReleaseSave").setEnabled(false);
-                // this.byId("btnCancelReleaseSave").setEnabled(false);
-                // this.byId("btnRejectSave").setEnabled(false);
-                // this.byId("btnPrintPreview").setEnabled(false);
-                // this.byId("btnExport").setEnabled(false);
-                // this.byId("btnRefresh").setEnabled(false);
-
                 this._tableRendered = "";
-                var oTableEventDelegate = {
-                    onkeyup: function(oEvent){
-                        _this.onKeyUp(oEvent);
-                    },
-
-                    onAfterRendering: function(oEvent) {
-                        _this.onAfterTableRendering(oEvent);
-                    }
-                };
-
-                this.byId("poRelTab").addEventDelegate(oTableEventDelegate);
-
-                var testDelegate = {
-                    change: function(oEvent){
-                        _this.onChangeSmartFilter(oEvent);
-                    }
-                };
-
-                this.byId("filterRelGrp").addEventDelegate(testDelegate)
             },
 
             onAfterTableRendering: function(oEvent) {
@@ -129,6 +105,119 @@ sap.ui.define([
                     this.setActiveRowHighlight(this._tableRendered.replace("Tab", ""));
                     this._tableRendered = "";
                 } 
+            },
+
+            handleSFButtonClick(oEvent) {
+                var oVBox = _this.getView().byId("vbMain");
+                if (oEvent.srcControl.mProperties.text && oEvent.srcControl.mProperties.text.toUpperCase() == "SHOW FILTER BAR") {
+                    oVBox.setHeight("70%");
+                } else if (oEvent.srcControl.mProperties.text && oEvent.srcControl.mProperties.text.toUpperCase() == "HIDE FILTER BAR") {
+                    oVBox.setHeight("85%");
+                }
+            },
+
+            onColumnClick: function(oID, oName) {
+                $('#' + oID).click(function(oEvent) { //Attach Table Header Element Event
+                    
+                    var oTarget = oEvent.currentTarget; //Get hold of Header Element
+                    var oIndex = -1; //Get the column Index
+
+                    _this.getView().byId("poRelTab").getColumns().forEach((col, idx) => {
+                        if (col.getHeader().getText() === oTarget.innerText) oIndex = idx;
+                    })
+
+                    var oItems = _this.getView().byId("poRelTab").getItems();
+                    var oCells = oItems[0].getCells();
+                    _this.columnKey = oCells[oIndex].mBindingInfos.text.parts[0].path;
+                    _this.vColumnIndex = oIndex;
+
+                    if (_this._oTableFilters[_this.columnKey] !== undefined) {
+                        sap.ui.getCore().byId("colFilter").setValue(_this._oTableFilters[_this.columnKey]);
+                    }
+                    else {
+                        sap.ui.getCore().byId("colFilter").setValue("");
+                    }
+
+                    //set sort button color
+                    if (_this._sTableSortKey === _this.columnKey) {
+                        if (_this._sTableSortOrder === "Ascending") {
+                            sap.ui.getCore().byId("colSortAscButton").addStyleClass("activeColSorting");
+                            sap.ui.getCore().byId("colSortDescButton").removeStyleClass("activeColSorting");
+                        }
+                        else if (_this._sTableSortOrder === "Descending") {
+                            sap.ui.getCore().byId("colSortAscButton").removeStyleClass("activeColSorting");
+                            sap.ui.getCore().byId("colSortDescButton").addStyleClass("activeColSorting")
+                        }
+                    }
+                    else {
+                        sap.ui.getCore().byId("colSortAscButton").removeStyleClass("activeColSorting");
+                        sap.ui.getCore().byId("colSortDescButton").removeStyleClass("activeColSorting");
+                    }                   
+
+                    //open column options dialog
+                    _this._colDialog.openBy(oTarget);
+                });  
+            },
+
+            onColumnSortAscending: function() {
+                var oTable = this.byId("poRelTab"),
+                oBinding = oTable.getBinding("items"),
+                sPath,
+                aSorters = [];
+
+                sPath = this.columnKey;
+                aSorters.push(new Sorter(sPath, false));
+                oBinding.sort(aSorters);
+
+                this._sTableSortKey = this.columnKey;
+                this._sTableSortOrder = "Ascending";
+
+                oTable.getColumns().forEach(col => col.setProperty("sortIndicator", "None"));
+                oTable.getColumns()[this.vColumnIndex].setProperty("sortIndicator", this._sTableSortOrder);
+                this._colDialog.close();
+            },
+
+            onColumnSortDescending: function() {
+                var oTable = this.byId("poRelTab"),
+                oBinding = oTable.getBinding("items"),
+                sPath,
+                aSorters = [];
+
+                sPath = this.columnKey;
+                aSorters.push(new Sorter(sPath, true));
+                oBinding.sort(aSorters);
+
+                this._sTableSortKey = this.columnKey;
+                this._sTableSortOrder = "Descending";
+                oTable.getColumns().forEach(col => col.setProperty("sortIndicator", "None"));
+                oTable.getColumns()[this.vColumnIndex].setProperty("sortIndicator", this._sTableSortOrder);
+                this._colDialog.close();
+            },
+
+            onColumnFilter: function(oEvent) {
+                this._oTableFilters[this.columnKey] = oEvent.getParameter("value");
+                var sQuery = oEvent.getParameter("value");
+                var oBinding = this.getView().byId("poRelTab").getBinding("items");
+
+                var aFilter = new sap.ui.model.Filter({
+                    filters: [
+                        new sap.ui.model.Filter(this.columnKey, sap.ui.model.FilterOperator.Contains, sQuery)
+                    ]
+                });
+
+                if (sQuery === "") {
+                    oBinding.filter("");
+                }
+                else {
+                    oBinding.filter(aFilter);
+                }
+            },
+
+            onOpenColOptions: function(oEvent) {
+                var oPopover = sap.ui.getCore().byId(oEvent.getParameter("id"));
+                var oPopoverContent = oPopover.getContent()[0];
+                var oInputFilter = oPopoverContent.getContent()[2];
+                oInputFilter.focus();
             },
 
             getColumns: async function() {
@@ -175,6 +264,12 @@ sap.ui.define([
                                 _this._aSortableColumns["poRel"] = aColumns["sortableColumns"];
                                 _this._aFilterableColumns["poRel"] = aColumns["filterableColumns"]; 
                                 _this.addColumns(_this.byId("poRelTab"), aColumns["columns"], "poRel");
+
+                                // Add Column List Item
+                                _this.setRowReadMode("poRel");
+                                
+                                // Get Data
+                                _this.getPORel([], "");
                             }
                         }
                     },
@@ -253,35 +348,35 @@ sap.ui.define([
                     })
                 })
 
-                aSortableColumns.sort((a,b) => (a.position > b.position ? 1 : -1));
-                this.createViewSettingsDialog("sort", 
-                    new JSONModel({
-                        items: aSortableColumns,
-                        rowCount: aSortableColumns.length,
-                        activeRow: 0,
-                        table: ""
-                    })
-                );
+                // aSortableColumns.sort((a,b) => (a.position > b.position ? 1 : -1));
+                // this.createViewSettingsDialog("sort", 
+                //     new JSONModel({
+                //         items: aSortableColumns,
+                //         rowCount: aSortableColumns.length,
+                //         activeRow: 0,
+                //         table: ""
+                //     })
+                // );
 
-                aFilterableColumns.sort((a,b) => (a.position > b.position ? 1 : -1));
-                this.createViewSettingsDialog("filter", 
-                    new JSONModel({
-                        items: aFilterableColumns,
-                        rowCount: aFilterableColumns.length,
-                        table: ""
-                    })
-                );
+                // aFilterableColumns.sort((a,b) => (a.position > b.position ? 1 : -1));
+                // this.createViewSettingsDialog("filter", 
+                //     new JSONModel({
+                //         items: aFilterableColumns,
+                //         rowCount: aFilterableColumns.length,
+                //         table: ""
+                //     })
+                // );
 
                 aColumns.sort((a,b) => (a.position > b.position ? 1 : -1));
-                var aColumnProp = aColumns.filter(item => item.showable === true);
+                // var aColumnProp = aColumns.filter(item => item.showable === true);
 
-                this.createViewSettingsDialog("column", 
-                    new JSONModel({
-                        items: aColumnProp,
-                        rowCount: aColumnProp.length,
-                        table: ""
-                    })
-                );
+                // this.createViewSettingsDialog("column", 
+                //     new JSONModel({
+                //         items: aColumnProp,
+                //         rowCount: aColumnProp.length,
+                //         table: ""
+                //     })
+                // );
 
                 
                 return { columns: aColumns, sortableColumns: aSortableColumns, filterableColumns: aFilterableColumns };
@@ -294,46 +389,50 @@ sap.ui.define([
                 aColumns.forEach(col => {
                     // console.log(col)
                     if (col.type === "STRING" || col.type === "DATETIME") {
-                        table.addColumn(new sap.ui.table.Column({
+                        table.addColumn(new sap.m.Column({
                             id: model + "Col" + col.name,
-                            // id: col.name,
                             width: col.width,
-                            sortProperty: col.name,
-                            filterProperty: col.name,
-                            label: new sap.m.Text({text: col.label}),
-                            template: new sap.m.Text({text: "{" + model + ">" + col.name + "}"}),
-                            visible: col.visible
+                            // sortProperty: col.name,
+                            // filterProperty: col.name,
+                            // label: new sap.m.Text({text: col.label}),
+                            //header: new sap.m.Label({text: "{" + model + ">" + col.name + "}"}),
+                            header: new sap.m.Label({text: col.label}),
+                            visible: col.visible,
+                            demandPopin: true,
+                            minScreenWidth: "Desktop"
                         }));
                     }
                     else if (col.type === "NUMBER") {
-                        table.addColumn(new sap.ui.table.Column({
+                        table.addColumn(new sap.m.Column({
                             id: model + "Col" + col.name,
                             width: col.width,
                             hAlign: "End",
-                            sortProperty: col.name,
-                            filterProperty: col.name,
-                            label: new sap.m.Text({text: col.label}),
-                            template: new sap.m.Text({text: "{" + model + ">" + col.name + "}"}),
-                            visible: col.visible
+                            // sortProperty: col.name,
+                            // filterProperty: col.name,
+                            // label: new sap.m.Text({text: col.label}),
+                            // template: new sap.m.Text({text: "{" + model + ">" + col.name + "}"}),
+                            header: new sap.m.Label({text: col.label}),
+                            visible: col.visible,
+                            demandPopin: true,
+                            minScreenWidth: "Desktop"
                         }));
                     }
                     else if (col.type === "BOOLEAN" ) {
-                        table.addColumn(new sap.ui.table.Column({
+                        table.addColumn(new sap.m.Column({
                             id: model + "Col" + col.name,
                             width: col.width,
                             hAlign: "Center",
-                            sortProperty: col.name,
-                            filterProperty: col.name,                            
-                            label: new sap.m.Text({text: col.label}),
-                            template: new sap.m.CheckBox({selected: "{" + model + ">" + col.name + "}", editable: false}),
-                            visible: col.visible
+                            // sortProperty: col.name,
+                            // filterProperty: col.name,                            
+                            // label: new sap.m.Text({text: col.label}),
+                            // template: new sap.m.CheckBox({selected: "{" + model + ">" + col.name + "}", editable: false}),
+                            header: new sap.m.Label({text: col.label}),
+                            visible: col.visible,
+                            demandPopin: true,
+                            minScreenWidth: "Desktop"
                         }));
                     }
                 })
-            },
-
-            onChangeSmartFilter(oEvent) {
-                console.log("onChangeSmartFilter", oEvent)
             },
 
             getRelGrp() {
@@ -400,7 +499,7 @@ sap.ui.define([
             },
 
             getPORel(pFilters, pFilterGlobal) {
-                console.log("getPORel", pFilters, pFilterGlobal)
+                //console.log("getPORel", pFilters, pFilterGlobal)
                 
                 var oModel = this.getOwnerComponent().getModel();
                 oModel.read('/POReleaseSet', {
@@ -417,33 +516,40 @@ sap.ui.define([
                             })
 
                             var aFilterTab = [];
-                            if (_this.getView().byId("poRelTab").getBinding("rows")) {
-                                aFilterTab = _this.getView().byId("poRelTab").getBinding("rows").aFilters;
-                            }
-
+                            // if (_this.getView().byId("poRelTab").getBinding("rows")) {
+                            //     aFilterTab = _this.getView().byId("poRelTab").getBinding("rows").aFilters;
+                            // }
+                            
                             var oJSONModel = new sap.ui.model.json.JSONModel();
                             oJSONModel.setData(data);
                             _this.getView().setModel(oJSONModel, "poRel");
                             _this._tableRendered = "poRelTab";
 
                             _this.onFilterBySmart(pFilters, pFilterGlobal, aFilterTab);
-
-                            // _this.getView().getModel("ui").setProperty("/activeTransNo", data.results[0].TRANSNO);
-                            // _this.getView().getModel("ui").setProperty("/activeTransItm", data.results[0].TRANSITM);
-                            // _this.getView().getModel("ui").setProperty("/activePlantCd", data.results[0].PLANTCD);
-                            // _this.getView().getModel("ui").setProperty("/activeMatNo", data.results[0].MATNO);
-                            // _this.getView().getModel("ui").setProperty("/activeHdrRowPath", "/results/0");
-                            // _this.getView().getModel("ui").setProperty("/rowCountMrpHdr", data.results.length.toString());
-
-                            _this.setRowReadMode("poRel");
                         }
 
                         var oTable = _this.getView().byId("poRelTab");
-                        oTable.getColumns().forEach((col, idx) => {   
-                            if (col._oSorter) {
-                                oTable.sort(col, col.mProperties.sortOrder === "Ascending" ? SortOrder.Ascending : SortOrder.Descending, true);
+                        var oBinding = oTable.getBinding("items");
+                        _this.getView().byId("poRelTab").getColumns().forEach((col, idx) => {
+                            if (col.sId.replace("poRelCol", "") === _this._sTableSortKey) { 
+                                console.log("sort", _this._sTableSortKey, _this._sTableSortOrder)
+                                var sPath, aSorters = [];
+                                sPath = _this._sTableSortKey;
+                                aSorters.push(new Sorter(sPath, false));
+                                oBinding.sort(aSorters);
+                                
+                                oTable.getColumns().forEach(col => col.setProperty("sortIndicator", "None"));
+                                oTable.getColumns()[idx].setProperty("sortIndicator", _this._sTableSortOrder);
                             }
-                        });
+                        })
+
+                        //_this.onColumnSortAscending();
+                        // var oTable = _this.getView().byId("poRelTab");
+                        // oTable.getColumns().forEach((col, idx) => {   
+                        //     if (col._oSorter) {
+                        //         oTable.sort(col, col.mProperties.sortOrder === "Ascending" ? SortOrder.Ascending : SortOrder.Descending, true);
+                        //     }
+                        // });
                         
                         _this.closeLoadingDialog();
                     },
@@ -452,6 +558,31 @@ sap.ui.define([
                         _this.closeLoadingDialog();
                     }
                 })
+
+                // Set Sort and Filter to table columns
+                if (!this._colDialog) {
+                    this._colDialog = sap.ui.xmlfragment("zuiporel.view.fragments.ColumnDialog", this);
+                    // this._oResponsivePopover.setModel(this.getView().getModel());
+                }
+
+                var oTable = _this.getView().byId("poRelTab");
+                oTable.addEventDelegate({
+                    onAfterRendering: function(oEvent) {
+
+                        //var oHeader = this.$().find('.sapMListTblHeaderCell'); //Get hold of table header elements
+                        var oHeader = document.getElementsByClassName('sapMListTblHeaderCell');
+                        //console.log("onAfterRendering2", oHeader)
+                        for (var i = 0; i < oHeader.length; i++) {
+                            var oID = oHeader[i].id;
+                            var oName = oHeader[i].textContent;
+                            _this.onColumnClick(oID, oName);
+                        }
+                        
+                        //_this.onAfterTableRendering(oEvent);
+                    }
+                });
+
+                //this.byId("poRelTab").addEventDelegate(oTableEventDelegate);
             },
 
             onFilterBySmart(pFilters, pFilterGlobal, pFilterTab) {
@@ -513,30 +644,35 @@ sap.ui.define([
                     aFilterGrp.push(oFilterGrp);
                     aFilter = [];
                 }
-                
-                // if (aFilterGrp.length == 0) oFilter = new Filter(aFilter, false);
-                // else oFilter = new Filter(aFilterGrp, true);
+
+                if (Object.keys(_this._oTableFilters).length > 0) {
+                    var sColumnKey = Object.keys(_this._oTableFilters)[0];
+                    aFilter.push(new Filter(sColumnKey, FilterOperator.Contains, _this._oTableFilters[sColumnKey]));
+                    var oFilterGrp = new Filter(aFilter, false);
+                    aFilterGrp.push(oFilterGrp);
+                    aFilter = [];
+                }
 
                 oFilter = new Filter(aFilterGrp, true);
 
-                this.byId("poRelTab").getBinding("rows").filter(oFilter, "Application");
+                this.byId("poRelTab").getBinding("items").filter(oFilter);
 
                 
-                if (pFilterTab.length > 0) {
-                    pFilterTab.forEach(item => {
-                        var iColIdx = _this._aColumns["poRel"].findIndex(x => x.name == item.sPath);
-                        _this.getView().byId("poRelTab").filter(_this.getView().byId("poRelTab").getColumns()[iColIdx], 
-                            item.oValue1);
-                    });
-                }
+                // if (pFilterTab.length > 0) {
+                //     pFilterTab.forEach(item => {
+                //         var iColIdx = _this._aColumns["poRel"].findIndex(x => x.name == item.sPath);
+                //         _this.getView().byId("poRelTab").filter(_this.getView().byId("poRelTab").getColumns()[iColIdx], 
+                //             item.oValue1);
+                //     });
+                // }
             },
 
             onRelease(pType) {
                 _this.showLoadingDialog("Executing...");
                 var oTable = this.byId("poRelTab");
-                var aSelIdx = oTable.getSelectedIndices();
+                var aSelRows = oTable.getSelectedItems();
 
-                if (aSelIdx.length === 0) {
+                if (aSelRows.length === 0) {
                     MessageBox.information(_oCaption.INFO_NO_SELECTED);
                     _this.closeLoadingDialog();
                     return;
@@ -546,18 +682,18 @@ sap.ui.define([
                 var aPOItem = [];
 
                 var aData = this.getView().getModel("poRel").getData().results;
-                //console.log("aIndeces", oTable.getBinding("rows"))
-                var aIndices = oTable.getBinding("rows").aIndices;
+                //var aIndices = oTable.getBinding("rows").aIndices;
 
-                aSelIdx.forEach(idx => {
-                    if ((pType == "CANCEL" || pType == "REJECT") && aData[aIndices[idx]].WITHGR != "X") {
+                aSelRows.forEach((e, i) => {
+                    var oRow = e.getBindingContext("poRel").getObject();
+                    if ((pType == "CANCEL" || pType == "REJECT") && oRow.WITHGR != "X") {
                         aPOItem.push({
-                            "Pono": aData[aIndices[idx]].PONO
+                            "Pono": oRow.PONO
                         })
                     } else if (pType == "RELEASE") {
                         aPOItem.push({
-                            "Pono": aData[aIndices[idx]].PONO,
-                            "RelCode": aData[aIndices[idx]].RELCD
+                            "Pono": oRow.PONO,
+                            "RelCode": oRow.RELCD
                         })
                     }
                 })
@@ -839,49 +975,17 @@ sap.ui.define([
             },
 
             setRowReadMode(arg) {
-                var oTable = this.byId(arg + "Tab");
-                oTable.getColumns().forEach((col, idx) => {                    
-                    this._aColumns[arg].filter(item => item.label === col.getLabel().getText())
-                        .forEach(ci => {
-                            if (ci.type === "STRING" || ci.type === "NUMBER") {
-                                col.setTemplate(new sap.m.Text({
-                                    text: "{" + arg + ">" + ci.name + "}",
-                                    wrapping: false,
-                                    tooltip: "{" + arg + ">" + ci.name + "}"
-                                }));
-                            }
-                            else if (ci.type === "BOOLEAN") {
-                                col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}", editable: false}));
-                            }
+                var oColumnListItem = this.getView().byId("cliPORel");
 
-                            if (ci.required) {
-                                col.getLabel().removeStyleClass("requiredField");
-                            }
-                        })
-                })
-            },
+                this._aColumns[arg].forEach((col, idx) => {
+                    var oCell = new sap.m.Text({
+                        text: "{" + arg + ">" + col.name + "}",
+                        wrapping: false,
+                        tooltip: "{" + arg + ">" + col.name + "}"
+                    })
 
-            createViewSettingsDialog: function (arg1, arg2) {
-                var sDialogFragmentName = null;
-
-                if (arg1 === "sort") sDialogFragmentName = "zuiporel.view.fragments.SortDialog";
-                else if (arg1 === "filter") sDialogFragmentName = "zuiporel.view.fragments.FilterDialog";
-                else if (arg1 === "column") sDialogFragmentName = "zuiporel.view.fragments.ColumnDialog";
-
-                var oViewSettingsDialog = this._oViewSettingsDialog[sDialogFragmentName];
-
-                if (!oViewSettingsDialog) {
-                    oViewSettingsDialog = sap.ui.xmlfragment(sDialogFragmentName, this);
-                    
-                    if (Device.system.desktop) {
-                        oViewSettingsDialog.addStyleClass("sapUiSizeCompact");
-                    }
-
-                    oViewSettingsDialog.setModel(arg2);
-
-                    this._oViewSettingsDialog[sDialogFragmentName] = oViewSettingsDialog;
-                    this.getView().addDependent(oViewSettingsDialog);
-                }
+                    oColumnListItem.addCell(oCell);
+                });            
             },
             
             getConnector(args) {
@@ -900,270 +1004,6 @@ sap.ui.define([
                 }
 
                 return oConnector;
-            },
-
-            onColSortCellClick: function (oEvent) {
-                this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"].getModel().setProperty("/activeRow", (oEvent.getParameters().rowIndex));
-            },
-
-            onColSortSelectAll: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];               
-                oDialog.getContent()[0].addSelectionInterval(0, oDialog.getModel().getData().rowCount - 1);
-            },
-
-            onColSortDeSelectAll: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];               
-                oDialog.getContent()[0].removeSelectionInterval(0, oDialog.getModel().getData().rowCount - 1);
-            },
-
-            onColSortRowFirst: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                var iActiveRow = oDialog.getModel().getData().activeRow;
-
-                var oDialogData = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"].getModel().getData().items;
-                oDialogData.filter((item, index) => index === iActiveRow)
-                    .forEach(item => item.position = 0);
-                oDialogData.filter((item, index) => index !== iActiveRow)
-                    .forEach((item, index) => item.position = index + 1);
-                oDialogData.sort((a,b) => (a.position > b.position ? 1 : -1));
-
-                oDialog.getModel().setProperty("/items", oDialogData);
-                oDialog.getModel().setProperty("/activeRow", iActiveRow - 1);
-            },
-
-            onColSortRowUp: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                var iActiveRow = oDialog.getModel().getData().activeRow;
-
-                var oDialogData = oDialog.getModel().getData().items;
-                oDialogData.filter((item, index) => index === iActiveRow).forEach(item => item.position = iActiveRow - 1);
-                oDialogData.filter((item, index) => index === iActiveRow - 1).forEach(item => item.position = item.position + 1);
-                oDialogData.sort((a,b) => (a.position > b.position ? 1 : -1));
-
-                oDialog.getModel().setProperty("/items", oDialogData);
-                oDialog.getModel().setProperty("/activeRow", iActiveRow - 1);
-            },
-
-            onColSortRowDown: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                var iActiveRow = oDialog.getModel().getData().activeRow;
-
-                var oDialogData = oDialog.getModel().getData().items;
-                oDialogData.filter((item, index) => index === iActiveRow).forEach(item => item.position = iActiveRow + 1);
-                oDialogData.filter((item, index) => index === iActiveRow + 1).forEach(item => item.position = item.position - 1);
-                oDialogData.sort((a,b) => (a.position > b.position ? 1 : -1));
-
-                oDialog.getModel().setProperty("/items", oDialogData);
-                oDialog.getModel().setProperty("/activeRow", iActiveRow + 1);
-            },
-
-            onColSortRowLast: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                var iActiveRow = oDialog.getModel().getData().activeRow;
-
-                var oDialogData = oDialog.getModel().getData().items;
-                oDialogData.filter((item, index) => index === iActiveRow)
-                    .forEach(item => item.position = oDialogData.length - 1);
-                    oDialogData.filter((item, index) => index !== iActiveRow)
-                    .forEach((item, index) => item.position = index);
-                    oDialogData.sort((a,b) => (a.position > b.position ? 1 : -1));
-
-                oDialog.getModel().setProperty("/items", oDialogData);
-                oDialog.getModel().setProperty("/activeRow", iActiveRow - 1);
-            },
-
-            onColPropSelectAll: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.ColumnDialog"];               
-                oDialog.getContent()[0].addSelectionInterval(0, oDialog.getModel().getData().rowCount - 1);
-            },
-
-            onColPropDeSelectAll: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.ColumnDialog"];               
-                oDialog.getContent()[0].removeSelectionInterval(0, oDialog.getModel().getData().rowCount - 1);
-            },
-
-            onColumnProp: function(oEvent) {
-                var aColumns = [];
-                var oTable = oEvent.getSource().oParent.oParent;
-                
-                oTable.getColumns().forEach(col => {
-                    aColumns.push({
-                        name: col.getProperty("sortProperty"), 
-                        label: col.getLabel().getText(),
-                        position: col.getIndex(), 
-                        selected: col.getProperty("visible")
-                    });
-                })
-                
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.ColumnDialog"];
-                oDialog.getModel().setProperty("/table", oTable.getBindingInfo("rows").model);
-                oDialog.getModel().setProperty("/items", aColumns);
-                oDialog.getModel().setProperty("/rowCount", aColumns.length);
-                oDialog.open();
-            },
-
-            beforeOpenColProp: function(oEvent) {
-                oEvent.getSource().getModel().getData().items.forEach(item => {
-                    if (item.selected) {
-                        oEvent.getSource().getContent()[0].addSelectionInterval(item.position, item.position);
-                    }
-                    else {
-                        oEvent.getSource().getContent()[0].removeSelectionInterval(item.position, item.position);
-                    }
-                })
-            },            
-
-            onColumnPropConfirm: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.ColumnDialog"];
-                var oDialogTable = oDialog.getContent()[0];
-                var aSelRows = oDialogTable.getSelectedIndices();
-
-                if (aSelRows.length === 0) {
-                    MessageBox.information(_oCaption.INFO_SEL_ONE_COL);
-                }
-                else {
-                    oDialog.close();
-                    var sTable = oDialog.getModel().getData().table;
-                    var oTable = this.byId(sTable + "Tab");
-                    var oColumns = oTable.getColumns();
-
-                    oColumns.forEach(col => {
-                        if (aSelRows.filter(item => item === col.getIndex()).length === 0) {
-                            col.setVisible(false);
-                        }
-                        else col.setVisible(true);
-                    })
-                }
-            },
-
-            onColumnPropCancel: function(oEvent) {
-                this._oViewSettingsDialog["zuiporel.view.fragments.ColumnDialog"].close();
-            },
-
-            onSorted: function(oEvent) {
-                var sColumnName = oEvent.getParameters().column.getProperty("sortProperty");
-                var sSortOrder = oEvent.getParameters().sortOrder;
-                var bMultiSort = oEvent.getParameters().columnAdded;
-                var oSortData = this._aSortableColumns[oEvent.getSource().getBindingInfo("rows").model];
-
-                if (!bMultiSort) {
-                    oSortData.forEach(item => {
-                        if (item.name === sColumnName) {
-                            item.sorted = true;
-                            item.sortOrder = sSortOrder;
-                        }
-                        else {
-                            item.sorted = false;
-                        } 
-                    })
-                }
-            },
-
-            onColSort: function(oEvent) {
-                var oTable = oEvent.getSource().oParent.oParent;               
-                var aSortableColumns = this._aSortableColumns[oTable.getBindingInfo("rows").model];
-
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                oDialog.getModel().setProperty("/table", oTable.getBindingInfo("rows").model);
-                oDialog.getModel().setProperty("/items", aSortableColumns);
-                oDialog.getModel().setProperty("/rowCount", aSortableColumns.length);
-                oDialog.open();
-            },
-
-            beforeOpenColSort: function(oEvent) {
-                oEvent.getSource().getContent()[0].removeSelectionInterval(0, oEvent.getSource().getModel().getData().items.length - 1);
-                oEvent.getSource().getModel().getData().items.forEach(item => {
-                    if (item.sorted) {                       
-                        oEvent.getSource().getContent()[0].addSelectionInterval(item.position, item.position);
-                    }
-                })
-            },
-
-            onColSortConfirm: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"];
-                oDialog.close();
-
-                var sTable = oDialog.getModel().getData().table;
-                var oTable = this.byId(sTable + "Tab");
-                var oDialogData = oDialog.getModel().getData().items;
-                var oDialogTable = oDialog.getContent()[0];
-                var aSortSelRows = oDialogTable.getSelectedIndices();
-
-                oDialogData.forEach(item => item.sorted = false);
-
-                if (aSortSelRows.length > 0) {
-                    oDialogData.forEach((item, idx) => {
-                        if (aSortSelRows.filter(si => si === idx).length > 0) {
-                            var oColumn = oTable.getColumns().filter(col => col.getProperty("sortProperty") === item.name)[0];
-                            oTable.sort(oColumn, item.sortOrder === "Ascending" ? SortOrder.Ascending : SortOrder.Descending, true);
-                            item.sorted = true;
-                        }
-                    })
-                }
-
-                this._aSortableColumns[sTable] = oDialogData;
-            },
-
-            onColSortCancel: function(oEvent) {
-                this._oViewSettingsDialog["zuiporel.view.fragments.SortDialog"].close();
-            },
-
-            onColFilter: function(oEvent) {
-                var oTable = oEvent.getSource().oParent.oParent               
-                var aFilterableColumns = this._aFilterableColumns[oTable.getBindingInfo("rows").model];
-
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.FilterDialog"];
-                oDialog.getModel().setProperty("/table", oTable.getBindingInfo("rows").model);
-                oDialog.getModel().setProperty("/items", aFilterableColumns);
-                oDialog.getModel().setProperty("/rowCount", aFilterableColumns.length);
-                oDialog.open();
-            },
-
-            onColFilterConfirm: function(oEvent) {
-                var oDialog = this._oViewSettingsDialog["zuiporel.view.fragments.FilterDialog"];
-                oDialog.close();
-
-                var bFilter = false;
-                var aFilter = [];
-                var oFilter = null;
-                var sTable = oDialog.getModel().getData().table;
-                var oDialogData = oDialog.getModel().getData().items;
-
-                oDialogData.forEach(item => {
-                    if (item.value !== "") {
-                        bFilter = true;
-                        aFilter.push(new Filter(item.name, this.getConnector(item.connector), item.value))
-                    }
-                })
-
-                this.byId(sTable + "Tab").getBinding("rows").filter(oFilter, "Application");
-                this._aFilterableColumns[sTable] = oDialogData;
-            },
-
-            onColFilterCancel: function(oEvent) {
-                this._oViewSettingsDialog["zuiporel.view.fragments.FilterDialog"].close();
-            },
-
-            onKeyUp(oEvent) {
-                if ((oEvent.key === "ArrowUp" || oEvent.key === "ArrowDown") && oEvent.srcControl.sParentAggregationName === "rows") {
-                    var oTable = this.byId(oEvent.srcControl.sId).oParent;
-
-                    if (oTable.getId().indexOf("poRelTab") >= 0) {
-                        if (this.byId(oEvent.srcControl.sId).getBindingContext("poRel")) {
-                            var sRowPath = this.byId(oEvent.srcControl.sId).getBindingContext("poRel").sPath;
-                            
-                            oTable.getModel("poRel").getData().results.forEach(row => row.ACTIVE = "");
-                            oTable.getModel("poRel").setProperty(sRowPath + "/ACTIVE", "X"); 
-                            
-                            oTable.getRows().forEach(row => {
-                                if (row.getBindingContext("poRel") && row.getBindingContext("poRel").sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
-                                    row.addStyleClass("activeRow");
-                                }
-                                else row.removeStyleClass("activeRow")
-                            })
-                        }
-                    }
-                }
             },
 
             showLoadingDialog(arg) {
@@ -1190,20 +1030,23 @@ sap.ui.define([
                 var sFileName = "";
                 if (pModel == "poRel") {
                     var columns = oTable.getColumns();
+                    console.log("export columns", columns, _this._aColumns, oTable.getItems())
                     for (var i = 0; i < columns.length; i++) {
                         aCols.push({
-                            label: columns[i].mProperties.filterProperty,
-                            property: columns[i].mProperties.filterProperty,
+                            // label: columns[i].mProperties.filterProperty,
+                            // property: columns[i].mProperties.filterProperty,
+                            label: columns[i].sId.replace("poRelCol", ""),
+                            property: columns[i].sId.replace("poRelCol", ""),
                             type: 'string'
                         })
                     }
 
                     sFileName = "PO Release";
 
-                    var aData = _this.getView().getModel(pModel).getData().results;
-                    var aIndices = this.byId("poRelTab").getBinding("rows").aIndices;
-                    aIndices.forEach(item => {
-                        aRows.push(aData[item]);
+                    //var aData = _this.getView().getModel(pModel).getData().results;
+                    var aItems = this.byId("poRelTab").getItems();
+                    aItems.forEach(item => {
+                        aRows.push(_this.getView().getModel(pModel).getProperty(item.oBindingContexts[pModel].sPath));
                     });
                 } else if (pModel == "poResult") {
                     aCols.push({
@@ -1253,95 +1096,6 @@ sap.ui.define([
                     });
             },
 
-            onFirstVisibleRowChanged: function (oEvent) {
-                var oTable = oEvent.getSource();
-                var sModel;
-
-                if (oTable.getId().indexOf("poRelTab") >= 0) {
-                    sModel = "poRel";
-                }
-
-                setTimeout(() => {
-                    var oData = oTable.getModel(sModel).getData().results;
-                    var iStartIndex = oTable.getBinding("rows").iLastStartIndex;
-                    var iLength = oTable.getBinding("rows").iLastLength + iStartIndex;
-
-                    if (oTable.getBinding("rows").aIndices.length > 0) {
-                        for (var i = iStartIndex; i < iLength; i++) {
-                            var iDataIndex = oTable.getBinding("rows").aIndices.filter((fItem, fIndex) => fIndex === i);
-    
-                            if (oData[iDataIndex].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
-                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
-                        }
-                    }
-                    else {
-                        for (var i = iStartIndex; i < iLength; i++) {
-                            if (oData[i].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
-                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
-                        }
-                    }
-                }, 1);
-            },
-
-            onFilter: function(oEvent) {
-                var oTable = oEvent.getSource();
-                var sModel;
-
-                if (oTable.getId().indexOf("poRelTab") >= 0) {
-                    sModel = "poRel";
-                }
-
-                this.setActiveRowHighlight(sModel);
-            },
-
-            onColumnUpdated: function (oEvent) {
-                var oTable = oEvent.getSource();
-                var sModel;
-
-                if (oTable.getId().indexOf("poRelTab") >= 0) {
-                    sModel = "poRel";
-                }
-
-                this.setActiveRowHighlight(sModel);
-            },
-
-            setActiveRowHighlight(arg) {
-                var oTable = this.byId(arg + "Tab");
-                
-                setTimeout(() => {
-                    var iActiveRowIndex = oTable.getModel(arg).getData().results.findIndex(item => item.ACTIVE === "X");
-
-                    oTable.getRows().forEach(row => {
-                        if (row.getBindingContext(arg) && +row.getBindingContext(arg).sPath.replace("/results/", "") === iActiveRowIndex) {
-                            row.addStyleClass("activeRow");
-                        }
-                        else row.removeStyleClass("activeRow");
-                    })
-                }, 1);
-            },
-
-            onCellClick: function(oEvent) {
-                if (oEvent.getParameters().rowBindingContext) {
-                    var oTable = oEvent.getSource(); //this.byId("ioMatListTab");
-                    var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
-                    var sModel;
-
-                    if (oTable.getId().indexOf("poRelTab") >= 0) {
-                        sModel = "poRel";
-                    }
-    
-                    oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
-                    oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
-                    
-                    oTable.getRows().forEach(row => {
-                        if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
-                            row.addStyleClass("activeRow");
-                        }
-                        else row.removeStyleClass("activeRow");
-                    })
-                }
-            },
-
             getCaption() {
                 var oJSONModel = new JSONModel();
                 var oDDTextParam = [];
@@ -1372,17 +1126,6 @@ sap.ui.define([
                 // MessageBox
                 oDDTextParam.push({CODE: "INFO_NO_SELECTED"});
                 oDDTextParam.push({CODE: "INFO_SEL_PO_WITHGR"});
-                // oDDTextParam.push({CODE: "INFO_NO_DATA_RESET"});
-                // oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
-                // oDDTextParam.push({CODE: "INFO_INVALID_SAVE"});
-                // oDDTextParam.push({CODE: "WARN_MR_NOT_NEGATIVE"});
-                // oDDTextParam.push({CODE: "WARN_NO_DATA_MODIFIED"});
-                // oDDTextParam.push({CODE: "INFO_SEL_ONE_COL"});
-                // oDDTextParam.push({CODE: "INFO_LAYOUT_SAVE"});
-                // oDDTextParam.push({CODE: "INFO_NO_DATA_EXEC"});
-                // oDDTextParam.push({CODE: "INFO_EXECUTE_SUCCESS"});
-                // oDDTextParam.push({CODE: "INFO_EXECUTE_FAIL"});
-                // oDDTextParam.push({CODE: "CONFIRM_PROCEED_EXECUTE"});
                 
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",

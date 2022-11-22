@@ -1,47 +1,20 @@
 <core:FragmentDefinition
-		xmlns="sap.m"
-        xmlns:f="sap.ui.layout.form"
-		xmlns:core="sap.ui.core"
-        xmlns:uit="sap.ui.table"
-        id="fragment-1" 
-        fragmentName="fragment1">
-    <Dialog contentWidth="250px" 
-        contentHeight="350px"
-        title="Columns"
-        resizable="true"
-        draggable="true"
-        beforeOpen="beforeOpenColProp">
-        <subHeader> 
-            <Toolbar>
-                <ToolbarSpacer/>
-                <Button id="btnColPropSelectAll" 
-                    icon="sap-icon://multiselect-all"
-                    press="onColPropSelectAll"/>
-                <Button id="btnColPropDeSelectAll" 
-                    icon="sap-icon://multiselect-none"
-                    press="onColPropDeSelectAll"/>                      
-            </Toolbar>
-        </subHeader>        
-        <beginButton>
-			<Button type="Emphasized" text="OK" press=".onColumnPropConfirm" width="4rem" />
-		</beginButton>
-        <endButton>
-			<Button text="Cancel" press=".onColumnPropCancel"/>
-		</endButton>
-        <uit:Table id="tabColumn"
-            class="tabColumnRowsBgColor"
-            rows="{/items}"
-            columnHeaderVisible="false"
-            selectionMode="MultiToggle"
-            visibleRowCount="{/rowCount}">
-            <uit:columns>
-                <uit:Column width="17rem">
-                    <Label text="" />
-                    <uit:template>
-                        <Text text="{label}" wrapping="false" />
-                    </uit:template>
-                </uit:Column>
-            </uit:columns>
-        </uit:Table>    
-    </Dialog>
+xmlns:core="sap.ui.core"
+xmlns="sap.m">
+  <ResponsivePopover title="Column Options" 
+  showHeader="false"
+  placement= "Bottom"
+  afterOpen= "onOpenColOptions">
+        <OverflowToolbar class="colOptionsMargin noBottomBorder">
+            <Button id="colSortAscButton"
+                icon="sap-icon://sort-ascending"
+                press=".onColumnSortAscending"
+                visible="true"/>
+            <Button id="colSortDescButton"
+                icon="sap-icon://sort-descending"
+                press=".onColumnSortDescending"
+                visible="true"/>
+            <Input id="colFilter" width="150px" placeholder="Enter filter value" change=".onColumnFilter" />
+        </OverflowToolbar>
+  </ResponsivePopover>
 </core:FragmentDefinition>

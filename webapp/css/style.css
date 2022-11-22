@@ -1,5 +1,115 @@
 /* Enter your custom styles here */
 
+.scrollHeight {
+    height: calc(50% - 1px) !important;
+}
+
+*[tabindex]:focus {
+    background-color: #e1ebf3 !important;
+}
+
 .activeRow {
     background-color: #e1ebf3 !important;
+}
+
+.tabColor {
+    background-color: aliceblue !important;
+}
+
+.tablePadding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.headerMargin {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.noPaddingTop {
+    padding-top: 0px !important;
+}
+
+.paddingTop {
+    padding-top: 1rem !important;
+}
+
+.headerToolbarPadding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.headerToolbarTopMargin {
+    margin-top: 1rem;
+}
+
+/* tr[data-gmcData="true"]{	
+    background: rgba(77, 189, 116, 0.2) !important;
+}
+
+tr[data-gmcData="false"]{	
+    background: #ffffff !important;
+} */
+
+.activeRow {
+    background: rgba(77, 189, 116, 0.2) !important;
+}
+
+.colOptionsMargin {
+    margin: 0.5rem;
+}
+
+.noBottomBorder {
+    border-bottom: none !important;
+}
+
+.sapMBtn.activeColSorting .sapMBtnInner {
+    background: linear-gradient(45deg, blue, transparent) !important;
+}
+
+.sapMBtn.activeColSorting .sapMBtnIcon {
+    color: #ffffff !important;
+}
+
+.sapMBtn.activeFiltering .sapMBtnInner {
+    background: linear-gradient(45deg, blue, transparent) !important;
+}
+
+.sapMBtn.activeFiltering .sapMBtnIcon {
+    color: #ffffff !important;
+}
+
+.sapMBtn .sapMBtnInner {
+    background: lightgrey;
+}
+
+.reqColumnColor {
+    color: red !important;
+}
+
+.headerContent {
+    height: 50%;
+    position: relative;
+}
+
+.headerContentMax {
+    height: 99% !important;
+    position: relative;
+}
+
+.detailContent {
+    height: 50%;
+    position: relative;
+}
+
+.detailScrollContainerMargin {
+    margin: 0 1rem;
+}
+
+.detailOverflowToolbarPadding {
+    padding: 0 1rem;
+}
+
+.headerScrollHeight {
+    height: 100%;
 }
