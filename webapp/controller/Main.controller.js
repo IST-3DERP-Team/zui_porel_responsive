@@ -1020,6 +1020,34 @@ sap.ui.define([
                 _this._LoadingDialog.close();
             },
 
+            onPrintPreview() {
+                var oTable = this.byId("poRelTab");
+                var aSelRows = oTable.getSelectedItems();
+
+                if (aSelRows.length === 0) {
+                    MessageBox.information(_oCaption.INFO_NO_SELECTED);
+                    return;
+                }
+
+                var aPOItem = [];
+                aSelRows.forEach((e, i) => {
+                    var oRow = e.getBindingContext("poRel").getObject();
+                    aPOItem.push({
+                        "PONo": oRow.PONO
+                    });
+                })
+
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                var hashUrl = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                        target: {
+                            semanticObject: "ZSO_POPRINT_PRVW",
+                            action: "display"
+                                },
+                            params : aPOItem[0]
+                        }));
+                oCrossAppNavigator.toExternal({target: {shellHash: hashUrl}});
+            },
+
             onExport(pModel) {
                 console.log("onExport", pModel)
                 var oTable = _this.getView().byId(pModel + "Tab");
