@@ -81,8 +81,8 @@
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" label="{ddtext>/VENDOR}" controlType="dropDownList"
-                            displayBehaviour="idAndDescription" mandatory="notMandatory" index="5">
+                        <sfb:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" label="{ddtext>/VENDOR}"
+                            preventInitialDataFetchInValueHelpDialog="false" displayBehaviour="idAndDescription" mandatory="notMandatory" index="5">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
