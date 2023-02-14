@@ -886,8 +886,9 @@ sap.ui.define([
                                         
                                         if (idxPO == (pPOList.length - 1)) {
                                             //_this.onUnlock(pPOList);
-                                            MessageBox.information(sMessage);
                                             _this.closeLoadingDialog();
+                                            MessageBox.information(sMessage);
+                                            _this.onRefresh();
                                         }
                                     },
                                     error: function(err) {
@@ -1029,23 +1030,24 @@ sap.ui.define([
                     return;
                 }
 
-                var aPOItem = [];
                 aSelRows.forEach((e, i) => {
                     var oRow = e.getBindingContext("poRel").getObject();
+                    var aPOItem = [];
                     aPOItem.push({
                         "PONo": oRow.PONO
                     });
-                })
 
-                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-                var hashUrl = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-                        target: {
-                            semanticObject: "ZSO_POPRINT_PRVW",
-                            action: "display"
-                                },
-                            params : aPOItem[0]
-                        }));
-                oCrossAppNavigator.toExternal({target: {shellHash: hashUrl}});
+                    var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                    var hashUrl = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                            target: {
+                                semanticObject: "ZSO_POPRINT_PRVW",
+                                action: "display"
+                                    },
+                                params : aPOItem[0]
+                            }));
+                    oCrossAppNavigator.toExternal({target: {shellHash: hashUrl}});
+
+                })
             },
 
             onExport(pModel) {
