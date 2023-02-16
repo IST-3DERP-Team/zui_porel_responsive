@@ -54,9 +54,22 @@
                 <Property Name="UNDERDELTOL" Type="Edm.Decimal" Nullable="false" Precision="3" Scale="1" sap:unicode="false" sap:label="Underdel. Tol." sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="UNLIMITED" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="Unlimited" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
             </EntityType>
+            <EntityType Name="POReleaseTbl" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="EBELN"/>
+                </Key>
+                <Property Name="EBELN" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Purchasing Doc." sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="REVNO" Type="Edm.String" MaxLength="10" sap:unicode="false" sap:label="Rev Number" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="RELDT" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Release Date" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="VERNO" Type="Edm.String" MaxLength="3" sap:unicode="false" sap:label="Version" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="RELCNT" Type="Edm.Int16" sap:unicode="false" sap:label="Rel Count" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="CREATEDBY" Type="Edm.String" MaxLength="12" sap:unicode="false" sap:label="Created By" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="CREATEDDT" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Created on" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+            </EntityType>
             <EntityContainer Name="ZGW_3DERP_POREL_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
                 <EntitySet Name="POReleaseSet" EntityType="ZGW_3DERP_POREL_SRV.PORelease" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
                 <EntitySet Name="POItemSet" EntityType="ZGW_3DERP_POREL_SRV.POItem" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="POReleaseTblSet" EntityType="ZGW_3DERP_POREL_SRV.POReleaseTbl" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
             </EntityContainer>
             <atom:link rel="self" href="http://159.138.39.203:8000/sap/opu/odata/sap/ZGW_3DERP_POREL_SRV/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
             <atom:link rel="latest-version" href="http://159.138.39.203:8000/sap/opu/odata/sap/ZGW_3DERP_POREL_SRV/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>

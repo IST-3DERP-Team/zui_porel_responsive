@@ -765,8 +765,10 @@ sap.ui.define([
                 }
 
                 console.log("PO_ReleaseSet Param", oParam)
-                var oModel = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
-                oModel.create("/PO_ReleaseSet", oParam, {
+
+                var oModel = _this.getOwnerComponent().getModel();
+                var oModelRFC = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                oModelRFC.create("/PO_ReleaseSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
                         console.log("PO_ReleaseSet", data);
@@ -774,7 +776,24 @@ sap.ui.define([
                         _this.closeLoadingDialog();
                         _this._aPOResultData = data.N_POREL_RETTAB.results;
                         _this.showPOResultDialog();
-                        
+
+                        _this._aPOResultData.forEach(item => {
+                            if (item.RelIndicatorNew == "1") {
+                                var param = {
+                                    EBELN: item.Purchaseorder
+                                };
+
+                                oModel.create("/POReleaseTblSet", param, {
+                                    method: "POST",
+                                    success: function(data, oResponse) {
+                                        console.log("POReleaseTblSet create", data);
+                                    },
+                                    error: function(err) {
+                                        console.log("error", err);
+                                    }
+                                });
+                            }
+                        })  
                     },
                     error: function(err) {
                         //_this.onUnlock(pPOList);
