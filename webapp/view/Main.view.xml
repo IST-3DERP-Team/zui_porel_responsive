@@ -66,18 +66,18 @@
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterDocType" key="DOCTYPE" groupId="_BASIC" label="{ddtext>/DOCTYPE}" controlType="dropDownList"
-                            displayBehaviour="idOnly" mandatory="notMandatory" index="2">
+                        <sfb:ControlConfiguration id="filterDocType" key="DOCTYPE" groupId="_BASIC" label="{ddtext>/DOCTYPE}"
+                            preventInitialDataFetchInValueHelpDialog="false" displayBehaviour="idOnly" mandatory="notMandatory" index="2">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPurchOrg" key="PURCHORG" groupId="_BASIC" label="{ddtext>/PURCHORG}" controlType="dropDownList"
-                            displayBehaviour="idAndDescription" mandatory="notMandatory" index="3">
+                        <sfb:ControlConfiguration id="filterPurchOrg" key="PURCHORG" groupId="_BASIC" label="{ddtext>/PURCHORG}"
+                            preventInitialDataFetchInValueHelpDialog="false" displayBehaviour="idAndDescription" mandatory="notMandatory" index="3">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPurchGrp" key="PURCHGRP" groupId="_BASIC" label="{ddtext>/PURCHGRP}" controlType="dropDownList"
-                            displayBehaviour="idAndDescription" mandatory="notMandatory" index="4">
+                        <sfb:ControlConfiguration id="filterPurchGrp" key="PURCHGRP" groupId="_BASIC" label="{ddtext>/PURCHGRP}"
+                            preventInitialDataFetchInValueHelpDialog="false" displayBehaviour="idAndDescription" mandatory="notMandatory" index="4">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
@@ -91,8 +91,8 @@
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:controlConfiguration>
-                        <sfb:ControlConfiguration id="filterPONo" key="PONO" groupId="_BASIC" label="{ddtext>/PONO}" controlType="dropDownList"
-                            displayBehaviour="idOnly" mandatory="notMandatory" index="7">
+                        <sfb:ControlConfiguration id="filterPONo" key="PONO" groupId="_BASIC" label="{ddtext>/PONO}"
+                            preventInitialDataFetchInValueHelpDialog="false" displayBehaviour="idOnly" mandatory="notMandatory" index="7">
                         </sfb:ControlConfiguration>
                     </sfb:controlConfiguration>
                     <sfb:layoutData>

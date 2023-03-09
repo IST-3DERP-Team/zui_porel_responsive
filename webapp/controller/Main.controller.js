@@ -534,9 +534,10 @@ sap.ui.define([
                         _this.getView().byId("poRelTab").getColumns().forEach((col, idx) => {
                             if (col.sId.replace("poRelCol", "") === _this._sTableSortKey) { 
                                 console.log("sort", _this._sTableSortKey, _this._sTableSortOrder)
-                                var sPath, aSorters = [];
+                                var sPath, aSorters = [], bSort;
                                 sPath = _this._sTableSortKey;
-                                aSorters.push(new Sorter(sPath, false));
+                                bSort = (_this._sTableSortOrder == "Ascending" ? false : true);
+                                aSorters.push(new Sorter(sPath, bSort));
                                 oBinding.sort(aSorters);
                                 
                                 oTable.getColumns().forEach(col => col.setProperty("sortIndicator", "None"));

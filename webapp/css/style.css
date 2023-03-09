@@ -43,14 +43,6 @@
     margin-top: 1rem;
 }
 
-/* tr[data-gmcData="true"]{	
-    background: rgba(77, 189, 116, 0.2) !important;
-}
-
-tr[data-gmcData="false"]{	
-    background: #ffffff !important;
-} */
-
 .activeRow {
     background: rgba(77, 189, 116, 0.2) !important;
 }
@@ -79,9 +71,9 @@ tr[data-gmcData="false"]{
     color: #ffffff !important;
 }
 
-.sapMBtn .sapMBtnInner {
+/* .sapMBtn .sapMBtnInner {
     background: lightgrey;
-}
+} */
 
 .reqColumnColor {
     color: red !important;
