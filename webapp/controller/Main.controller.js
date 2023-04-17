@@ -590,11 +590,12 @@ sap.ui.define([
             onFilterBySmart(pFilters, pFilterGlobal, pFilterTab) {
                 var oFilter = null;
                 var aFilter = [];
+                var aFilter2 = [];
                 var aFilterGrp = [];
                 var aFilterCol = [];
 
                 if (pFilters.length > 0) {
-                    pFilters[0].aFilters.forEach(x => {
+                    pFilters[0].aFilters.forEach((x, iIdx) => {
                         if (Object.keys(x).includes("aFilters")) {
                             x.aFilters.forEach(y => {
                                 var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == y.sPath.toUpperCase())[0].name;
@@ -605,6 +606,13 @@ sap.ui.define([
                             var oFilterGrp = new Filter(aFilter, false);
                             aFilterGrp.push(oFilterGrp);
                             aFilter = [];
+                        } else if ([...new Set(pFilters[0].aFilters.map((item) => item.sPath))].length == 1) {
+                            aFilter2.push(new Filter(x.sPath, FilterOperator.Contains, x.oValue1));
+                            if (iIdx == pFilters[0].aFilters.length - 1) {
+                                var oFilterGrp = new Filter(aFilter2, false);
+                                aFilterGrp.push(oFilterGrp);
+                                aFilter2 = [];
+                            }
                         } else {
                             var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == x.sPath.toUpperCase())[0].name;
                             aFilter.push(new Filter(sName, FilterOperator.Contains, x.oValue1));
