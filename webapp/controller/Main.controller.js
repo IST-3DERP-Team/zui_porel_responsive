@@ -714,48 +714,53 @@ sap.ui.define([
                     return;
                 }
 
-                var aParamLockPO = [];
-                aPOItem.forEach(item => {
-                    aParamLockPO.push({
-                        Pono: item.Pono
-                    })
-                });
+                _this.onUnlock(aPOItem, pType);
 
-                var oParam = {
-                    "N_LOCK_PO_ITEMTAB": aParamLockPO,
-                    "iv_count": 300, 
-                    "N_LOCK_PO_ENQ": [], 
-                    "N_LOCK_PO_OUTMESSAGES": [] 
-                }
+                // temporary disabled to continue
+//                 var aParamLockPO = [];
+//                 aPOItem.forEach(item => {
+//                     aParamLockPO.push({
+//                         Pono: item.Pono
+//                     })
+//                 });
 
-                oModel.create("/Lock_POHdr_Set", oParam, {
-                    method: "POST",
-                    success: function(data, oResponse) {
-                        console.log("Lock_POHdr_Set", data);
+//                 var oParam = {
+//                     "N_LOCK_PO_ITEMTAB": aParamLockPO,
+//                     "iv_count": 300, 
+//                     "N_LOCK_PO_ENQ": [], 
+//                     "N_LOCK_PO_OUTMESSAGES": [] 
+//                 }
 
-                        if (data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S").length == 0) {
-                            // Unlock first before release, reset, change PO to not encounter error
-                            _this.onUnlock(aPOItem, pType);
+//                 console.log("Lock_POHdr_Set param", oParam)
+//                 oModel.create("/Lock_POHdr_Set", oParam, {
+//                     method: "POST",
+//                     success: function(data, oResponse) {
+//                         console.log("Lock_POHdr_Set", data);
 
-                            // if (pType == "RELEASE") {
-                            //     _this.onRelSave(aPOItem);
-                            // } else if (pType == "CANCEL") {
-                            //     _this.onCancelRelSave(aPOItem);
-                            // } else if (pType == "REJECT") {
-                            //     _this.onRejectSave(aPOItem);
-                            // }
-                        } else {
-                            var oFilter = data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S")[0];
-                            MessageBox.warning(oFilter.Message);
-                            _this.closeLoadingDialog();
-                        }
+//                         if (data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S").length == 0) {
+//                             // Unlock first before release, reset, change PO to not encounter error
+//                             _this.onUnlock(aPOItem, pType);
+
+//                             // if (pType == "RELEASE") {
+//                             //     _this.onRelSave(aPOItem);
+//                             // } else if (pType == "CANCEL") {
+//                             //     _this.onCancelRelSave(aPOItem);
+//                             // } else if (pType == "REJECT") {
+//                             //     _this.onRejectSave(aPOItem);
+//                             // }
+//                         } else {
+//                             var oFilter = data.N_LOCK_PO_OUTMESSAGES.results.filter(x => x.Type != "S")[0];
+//                             MessageBox.warning(oFilter.Message);
+//                             _this.closeLoadingDialog();
+//                         }
                         
-                    },
-                    error: function(err) {
-                        MessageBox.error(err);
-                        _this.closeLoadingDialog();
-                    }
-                });
+//                     },
+//                     error: function(err) {
+//                         console.log("err", err)
+//                         MessageBox.error(err);
+//                         _this.closeLoadingDialog();
+//                     }
+//                 });
             },
 
             onRelSave(pPOList) {
@@ -938,39 +943,50 @@ sap.ui.define([
             },
 
             onUnlock(pPOList, pType) {
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
-
-                var aParamUnLockPO = [];
-                pPOList.forEach(item => {
-                    aParamUnLockPO.push({
-                        Pono: item.Pono
-                    })
-                });
-                var oParam = {
-                    "N_UNLOCK_PO_ITEMTAB": aParamUnLockPO,
-                    "N_UNLOCK_PO_ENQ": [], 
-                    "N_UNLOCK_PO_MESSAGES": [] 
+                // temporary disabled to proceed
+                if (pType == "RELEASE") {
+                    _this.onRelSave(pPOList);
+                } else if (pType == "CANCEL") {
+                    _this.onCancelRelSave(pPOList);
+                } else if (pType == "REJECT") {
+                    _this.onRejectSave(pPOList);
                 }
 
-                oModel.create("/Unlock_POHdr_Set", oParam, {
-                    method: "POST",
-                    success: function(data, oResponse) {
-                        console.log("Unlock_POHdr_Set", data)
-                        if (pType == "RELEASE") {
-                            _this.onRelSave(pPOList);
-                        } else if (pType == "CANCEL") {
-                            _this.onCancelRelSave(pPOList);
-                        } else if (pType == "REJECT") {
-                            _this.onRejectSave(pPOList);
-                        }
+                _this.closeLoadingDialog();
 
-                        //_this.closeLoadingDialog();
-                    },
-                    error: function(err) {
-                        MessageBox.error(err);
-                        _this.closeLoadingDialog();
-                    }
-                });
+//                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+
+//                 var aParamUnLockPO = [];
+//                 pPOList.forEach(item => {
+//                     aParamUnLockPO.push({
+//                         Pono: item.Pono
+//                     })
+//                 });
+//                 var oParam = {
+//                     "N_UNLOCK_PO_ITEMTAB": aParamUnLockPO,
+//                     "N_UNLOCK_PO_ENQ": [], 
+//                     "N_UNLOCK_PO_MESSAGES": [] 
+//                 }
+
+//                 oModel.create("/Unlock_POHdr_Set", oParam, {
+//                     method: "POST",
+//                     success: function(data, oResponse) {
+//                         console.log("Unlock_POHdr_Set", data)
+//                         if (pType == "RELEASE") {
+//                             _this.onRelSave(pPOList);
+//                         } else if (pType == "CANCEL") {
+//                             _this.onCancelRelSave(pPOList);
+//                         } else if (pType == "REJECT") {
+//                             _this.onRejectSave(pPOList);
+//                         }
+
+//                         //_this.closeLoadingDialog();
+//                     },
+//                     error: function(err) {
+//                         MessageBox.error(err);
+//                         _this.closeLoadingDialog();
+//                     }
+//                 });
             },
 
             onRefresh() {
