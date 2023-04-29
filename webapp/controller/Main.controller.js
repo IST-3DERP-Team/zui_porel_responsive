@@ -270,7 +270,8 @@ sap.ui.define([
                                 _this.setRowReadMode("poRel");
                                 
                                 // Get Data
-                                _this.getPORel([], "");
+                                //_this.getPORel([], "");
+                                _this.closeLoadingDialog();
                             }
                         }
                     },
@@ -593,36 +594,44 @@ sap.ui.define([
                 var aFilter2 = [];
                 var aFilterGrp = [];
                 var aFilterCol = [];
-
+                
                 if (pFilters.length > 0) {
-                    pFilters[0].aFilters.forEach((x, iIdx) => {
-                        if (Object.keys(x).includes("aFilters")) {
-                            x.aFilters.forEach(y => {
-                                var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == y.sPath.toUpperCase())[0].name;
-                                aFilter.push(new Filter(sName, FilterOperator.Contains, y.oValue1));
+                    if (pFilters[0].aFilters) {
+                        pFilters[0].aFilters.forEach((x, iIdx) => {
+                            if (Object.keys(x).includes("aFilters")) {
+                                x.aFilters.forEach(y => {
+                                    var sName = _this._aColumns["poRel"].filter(item => item.name.toUpperCase() == y.sPath.toUpperCase())[0].name;
+                                    aFilter.push(new Filter(sName, FilterOperator.Contains, y.oValue1));
+
+                                    //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
+                                });
+                                var oFilterGrp = new Filter(aFilter, false);
+                                aFilterGrp.push(oFilterGrp);
+                                aFilter = [];
+                            } else if ([...new Set(pFilters[0].aFilters.map((item) => item.sPath))].length == 1) {
+                                aFilter2.push(new Filter(x.sPath, FilterOperator.Contains, x.oValue1));
+                                if (iIdx == pFilters[0].aFilters.length - 1) {
+                                    var oFilterGrp = new Filter(aFilter2, false);
+                                    aFilterGrp.push(oFilterGrp);
+                                    aFilter2 = [];
+                                }
+                            } else {
+                                var sName = _this._aColumns["poRel"].filter(item => item.name.toUpperCase() == x.sPath.toUpperCase())[0].name;
+                                aFilter.push(new Filter(sName, FilterOperator.Contains, x.oValue1));
+                                var oFilterGrp = new Filter(aFilter, false);
+                                aFilterGrp.push(oFilterGrp);
+                                aFilter = [];
 
                                 //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
-                            });
-                            var oFilterGrp = new Filter(aFilter, false);
-                            aFilterGrp.push(oFilterGrp);
-                            aFilter = [];
-                        } else if ([...new Set(pFilters[0].aFilters.map((item) => item.sPath))].length == 1) {
-                            aFilter2.push(new Filter(x.sPath, FilterOperator.Contains, x.oValue1));
-                            if (iIdx == pFilters[0].aFilters.length - 1) {
-                                var oFilterGrp = new Filter(aFilter2, false);
-                                aFilterGrp.push(oFilterGrp);
-                                aFilter2 = [];
                             }
-                        } else {
-                            var sName = this._aColumns["poRel"].filter(item => item.name.toUpperCase() == x.sPath.toUpperCase())[0].name;
-                            aFilter.push(new Filter(sName, FilterOperator.Contains, x.oValue1));
-                            var oFilterGrp = new Filter(aFilter, false);
-                            aFilterGrp.push(oFilterGrp);
-                            aFilter = [];
-
-                            //if (!aFilterCol.includes(sName)) aFilterCol.push(sName);
-                        }
-                    });
+                        });
+                    } else {
+                        var sName = pFilters[0].sPath;
+                        aFilter.push(new Filter(sName, FilterOperator.EQ,  pFilters[0].oValue1));
+                        var oFilterGrp = new Filter(aFilter, false);
+                        aFilterGrp.push(oFilterGrp);
+                        aFilter = [];
+                    }
                 }
 
                 if (pFilterGlobal) {
@@ -802,6 +811,24 @@ sap.ui.define([
                                     method: "POST",
                                     success: function(data, oResponse) {
                                         console.log("POReleaseTblSet create", data);
+                                    },
+                                    error: function(err) {
+                                        console.log("error", err);
+                                    }
+                                });
+
+                                var paramVendor = {
+                                    "Show_Error": "X", 
+                                    "N_IT_INTVPO": [{ 
+                                        "Ebeln": item.Purchaseorder, 
+                                        "Userid": _startUpInfo.id
+                                    }] 
+                                }
+
+                                oModelRFC.create("/Update_VendorPOSet", paramVendor, {
+                                    method: "POST",
+                                    success: function(data, oResponse) {
+                                        console.log("Update_VendorPOSet create", data);
                                     },
                                     error: function(err) {
                                         console.log("error", err);
@@ -1178,6 +1205,7 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_COMMON_SRV");
                 
                 // Smart Filter
+                oDDTextParam.push({CODE: "SBU"});
                 oDDTextParam.push({CODE: "RELCD"});
                 oDDTextParam.push({CODE: "RELGRP"});
                 oDDTextParam.push({CODE: "DOCTYPE"});
